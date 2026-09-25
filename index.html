@@ -112,7 +112,6 @@
     </div>
   </div>
 
-
   <!-- Main Workspace -->
   <main class="max-w-7xl mx-auto w-full p-4 sm:p-6 flex-1 flex flex-col">
 
@@ -204,7 +203,8 @@
 
       </div>
     </section>
-<!-- 2. DAMAGE TALLY & ROLL TAB -->
+
+    <!-- 2. DAMAGE TALLY & ROLL TAB -->
     <section id="tab-content-tally" class="tab-panel hidden flex flex-col gap-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
@@ -306,6 +306,27 @@
               <div class="text-right">
                 <span class="text-[10px] text-slate-500 uppercase tracking-wider block">Damage Total</span>
                 <span id="tally-total" class="text-4xl font-extrabold font-mono-math text-amber-400">0</span>
+              </div>
+            </div>
+
+            <!-- Damage Visibility Selector (Public / Secret to DM / Local) -->
+            <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-900/80 rounded-lg border border-slate-800 text-xs">
+              <span class="text-slate-400 font-semibold flex items-center gap-1">
+                <span>📢</span> Share Damage:
+              </span>
+              <div class="flex flex-wrap items-center gap-3">
+                <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-amber-300 transition">
+                  <input type="radio" name="damage-visibility" value="public" checked class="text-amber-500 focus:ring-0">
+                  <span class="font-medium">📢 Public (Whole Table)</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-purple-300 hover:text-purple-200 transition">
+                  <input type="radio" name="damage-visibility" value="secret" class="text-purple-500 focus:ring-0">
+                  <span class="font-medium">🤫 Secret (DM Only)</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200 transition">
+                  <input type="radio" name="damage-visibility" value="self" class="text-slate-500 focus:ring-0">
+                  <span>🔒 Local (Self Only)</span>
+                </label>
               </div>
             </div>
 
@@ -460,11 +481,29 @@
           <!-- Generic Distance & Reach Thresholds (5 ft to 600 ft) -->
           <div class="pt-3 border-t border-slate-800 flex flex-col gap-2">
             <div class="flex items-center justify-between">
-              <span class="text-xs text-slate-300 font-semibold uppercase tracking-wider">Reach & Distance Check</span>
-              <span class="text-[10px] text-slate-500">5 ft to 600 ft</span>
+              <span class="text-xs text-slate-300 font-semibold uppercase tracking-wider">Reach & Ground Check</span>
+              <span class="text-[10px] text-slate-500">In Reach (Green) / Out of Reach (Red)</span>
             </div>
             <div class="flex flex-wrap gap-1.5 pt-1">
-              <span id="generic-range-5" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">5 ft</span> <span id="generic-range-10" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">10 ft</span> <span id="generic-range-15" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">15 ft</span> <span id="generic-range-20" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">20 ft</span> <span id="generic-range-25" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">25 ft</span> <span id="generic-range-30" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">30 ft</span> <span id="generic-range-40" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">40 ft</span> <span id="generic-range-50" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">50 ft</span> <span id="generic-range-60" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">60 ft</span> <span id="generic-range-80" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">80 ft</span> <span id="generic-range-90" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">90 ft</span> <span id="generic-range-100" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">100 ft</span> <span id="generic-range-120" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">120 ft</span> <span id="generic-range-150" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">150 ft</span> <span id="generic-range-300" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">300 ft</span> <span id="generic-range-320" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">320 ft</span> <span id="generic-range-400" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">400 ft</span> <span id="generic-range-500" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">500 ft</span> <span id="generic-range-600" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">600 ft</span>
+              <span id="generic-range-5" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">5 ft</span>
+              <span id="generic-range-10" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">10 ft</span>
+              <span id="generic-range-15" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">15 ft</span>
+              <span id="generic-range-20" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">20 ft</span>
+              <span id="generic-range-25" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">25 ft</span>
+              <span id="generic-range-30" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">30 ft</span>
+              <span id="generic-range-40" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">40 ft</span>
+              <span id="generic-range-50" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">50 ft</span>
+              <span id="generic-range-60" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">60 ft</span>
+              <span id="generic-range-80" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">80 ft</span>
+              <span id="generic-range-90" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">90 ft</span>
+              <span id="generic-range-100" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">100 ft</span>
+              <span id="generic-range-120" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">120 ft</span>
+              <span id="generic-range-150" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">150 ft</span>
+              <span id="generic-range-300" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">300 ft</span>
+              <span id="generic-range-320" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">320 ft</span>
+              <span id="generic-range-400" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">400 ft</span>
+              <span id="generic-range-500" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">500 ft</span>
+              <span id="generic-range-600" class="text-[11px] px-2 py-1 rounded border font-mono-math transition-all">600 ft</span>
             </div>
           </div>
         </div>
@@ -563,7 +602,7 @@
           <div class="bg-slate-900/90 p-4 rounded-xl border border-slate-800 text-center">
             <span class="text-xs text-slate-400 uppercase tracking-wider block mb-1">Remainder / Stray Change</span>
             <span id="loot-remainder" class="text-2xl sm:text-3xl font-extrabold font-mono-math text-amber-400">0 Ⓤ</span>
-            <span class="text-[11px] text-slate-500 block mt-1">Indivisible balance</span>
+            <span id="loot-kitty-note" class="text-[11px] text-slate-500 block mt-1">Indivisible balance</span>
           </div>
         </div>
 
@@ -624,7 +663,6 @@
       </div>
     </section>
 
-  
     <!-- 6. SIMPLE MATH TAB -->
     <section id="tab-content-math" class="tab-panel hidden flex flex-col gap-6">
       <div class="max-w-2xl mx-auto w-full bg-[#161a23] p-6 rounded-xl border border-slate-800 flex flex-col gap-5 shadow-lg">
@@ -680,27 +718,80 @@
   </main>
 
   <script>
+    // --- LOCAL STORAGE PERSISTENCE HELPERS ---
+    function loadStorageJson(key, defaultVal) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : defaultVal;
+      } catch (e) {
+        return defaultVal;
+      }
+    }
+
+    function saveStorageJson(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+      } catch (e) {}
+    }
+
     // --- STATE MANAGEMENT ---
     let currentTab = 'combat';
-    let tallyTotal = 0;
-    let tallyHistory = [];
+
+    // Tally & History Persistence
+    let tallyTotal = parseInt(localStorage.getItem('ttrpg_tally_total')) || 0;
+    let tallyHistory = loadStorageJson('ttrpg_tally_history', []);
+
+    function saveTallyState() {
+      try {
+        localStorage.setItem('ttrpg_tally_total', tallyTotal.toString());
+        saveStorageJson('ttrpg_tally_history', tallyHistory);
+      } catch (e) {}
+    }
 
     // Randomized Archetype pools
     const pcNames = ['Valiant Paladin', 'Elven Ranger', 'Arcane Wizard', 'Shield Barbarian', 'Shadow Rogue', 'Battle Cleric', 'Draconic Sorcerer'];
     const mobNames = ['Goblin Raider', 'Skeleton Archer', 'Bandit Cutthroat', 'Cultist Zealot', 'Wolf Pack Alpha', 'Zombie Brute', 'Orc Brawler'];
     const bossNames = ['Ancient Warlord', 'Dread Archmage', 'Shadow Drake', 'Undead Champion', 'Abyssal Fiend', 'Iron Golem'];
 
-    let combatants = [
+    // Combatants Persistence
+    let defaultCombatants = [
       { id: '1', name: 'Valiant Paladin', type: 'PC', maxHp: 58, currentHp: 58, tempHp: 0, conditions: [] },
       { id: '2', name: 'Goblin Raider 1', type: 'Monster', maxHp: 24, currentHp: 18, tempHp: 0, conditions: [] },
       { id: '3', name: 'Dread Archmage', type: 'Boss', maxHp: 180, currentHp: 180, tempHp: 15, conditions: [] }
     ];
+    let combatants = loadStorageJson('ttrpg_combatants', defaultCombatants);
 
-    let sessionNotes = [
+    function saveCombatantsState() {
+      saveStorageJson('ttrpg_combatants', combatants);
+    }
+
+    // Notes Persistence
+    let defaultNotes = [
       { id: 'n1', category: 'Quest', text: 'Seek the crypt beneath the crumbling watchtower before midnight.', pinned: true, time: '8:15 PM' },
       { id: 'n2', category: 'NPC', text: 'Blacksmith Gerald offers 10% discount if brought raw silver ore.', pinned: false, time: '8:40 PM' }
     ];
+    let sessionNotes = loadStorageJson('ttrpg_session_notes', defaultNotes);
     let activeNoteFilter = 'all';
+
+    function saveNotesState() {
+      saveStorageJson('ttrpg_session_notes', sessionNotes);
+    }
+
+    // Initiative & Round Persistence
+    let combatRound = parseInt(localStorage.getItem('ttrpg_combat_round')) || 1;
+    let defaultInitiative = [
+      { id: 'init-1', name: 'Valiant Paladin', init: 19, conditions: [] },
+      { id: 'init-2', name: 'Goblin Raider 1', init: 14, conditions: ['Prone'] },
+      { id: 'init-3', name: 'Dread Archmage', init: 11, conditions: ['Concentrating'] }
+    ];
+    let initiativeList = loadStorageJson('ttrpg_initiative_list', defaultInitiative);
+
+    function saveInitiativeState() {
+      saveStorageJson('ttrpg_initiative_list', initiativeList);
+      try {
+        localStorage.setItem('ttrpg_combat_round', combatRound.toString());
+      } catch (e) {}
+    }
 
     // --- TAB SWITCHER ---
     function switchTab(tabId) {
@@ -800,9 +891,9 @@
         `;
         container.appendChild(card);
       });
+      saveCombatantsState();
     }
 
-    
     function setTempHpPrompt(id) {
       const c = combatants.find(x => x.id === id);
       if (!c) return;
@@ -847,12 +938,16 @@
         time: timeStr
       });
       tallyTotal = 0;
+      saveTallyState();
       updateTallyUI();
     }
 
     function updateCombatantName(id, val) {
       const c = combatants.find(x => x.id === id);
-      if (c) c.name = val;
+      if (c) {
+        c.name = val;
+        saveCombatantsState();
+      }
     }
 
     function removeCombatant(id) {
@@ -928,7 +1023,6 @@
       renderCombatants();
     }
 
-
     // --- MULTIPLAYER REAL-TIME PEERJS NETWORKING ---
     let peerInstance = null;
     let peerRole = 'player'; // 'player' or 'dm'
@@ -948,6 +1042,7 @@
 
     function changeUserRole() {
       peerRole = document.getElementById('sync-user-role').value;
+      localStorage.setItem('ttrpg_user_role', peerRole);
       const dmCtrl = document.getElementById('sync-dm-controls');
       const playerCtrl = document.getElementById('sync-player-controls');
       
@@ -969,6 +1064,22 @@
       return res;
     }
 
+    function updateUrlRoomParam(code) {
+      try {
+        const url = new URL(window.location);
+        url.searchParams.set('room', code);
+        window.history.replaceState({}, '', url);
+      } catch (e) {}
+    }
+
+    function removeUrlRoomParam() {
+      try {
+        const url = new URL(window.location);
+        url.searchParams.delete('room');
+        window.history.replaceState({}, '', url);
+      } catch (e) {}
+    }
+
     function updateNetworkStatus(status, text) {
       const badge = document.getElementById('sync-status-badge');
       const btnDisconnect = document.getElementById('btn-disconnect-room');
@@ -988,12 +1099,16 @@
       }
     }
 
-    // --- DM CREATES ROOM ---
-    function createRoom() {
-      if (peerInstance) disconnectRoom();
-      const code = generateRoomCode();
+    // --- DM CREATES OR RECLAIMS ROOM ---
+    function createRoom(reconnectCode) {
+      if (peerInstance) disconnectRoom(true);
+      const code = (reconnectCode || generateRoomCode()).toUpperCase();
       currentRoomCode = code;
       const peerId = 'ttrpg-table-' + code.toLowerCase();
+
+      localStorage.setItem('ttrpg_active_room', code);
+      localStorage.setItem('ttrpg_user_role', 'dm');
+      updateUrlRoomParam(code);
 
       updateNetworkStatus('connecting', 'Creating Room...');
 
@@ -1005,7 +1120,7 @@
           document.getElementById('sync-room-display').classList.remove('hidden');
           document.getElementById('sync-room-display').classList.add('flex');
           document.getElementById('btn-create-room').classList.add('hidden');
-          updateNetworkStatus('connected', `Room: ${code} (DM - 0 Players)`);
+          updateNetworkStatus('connected', `Room: ${code} (DM - ${dmConnections.length} Players)`);
         });
 
         peerInstance.on('connection', (conn) => {
@@ -1026,18 +1141,20 @@
 
         peerInstance.on('error', (err) => {
           console.error("PeerJS error:", err);
-          alert("Connection error: " + err.type + ". Try creating room again.");
-          disconnectRoom();
+          if (err.type === 'unavailable-id') {
+            updateNetworkStatus('connected', `Room: ${code} (DM Host Active)`);
+          } else {
+            disconnectRoom();
+          }
         });
       } catch (e) {
-        alert("PeerJS failed to initialize: " + e.message);
         disconnectRoom();
       }
     }
 
     // --- PLAYER JOINS ROOM ---
     function joinRoom(autoCode) {
-      if (peerInstance) disconnectRoom();
+      if (peerInstance) disconnectRoom(true);
       const codeInput = document.getElementById('sync-join-input');
       const code = (autoCode || (codeInput ? codeInput.value.trim() : '')).toUpperCase();
       if (!code) {
@@ -1047,6 +1164,10 @@
 
       currentRoomCode = code;
       const targetDmPeerId = 'ttrpg-table-' + code.toLowerCase();
+
+      localStorage.setItem('ttrpg_active_room', code);
+      localStorage.setItem('ttrpg_user_role', 'player');
+      updateUrlRoomParam(code);
 
       updateNetworkStatus('connecting', `Connecting to ${code}...`);
 
@@ -1069,18 +1190,29 @@
           });
 
           clientConnectionToDm.on('close', () => {
-            alert("Disconnected from DM Room.");
-            disconnectRoom();
+            // Attempt automatic reconnect after momentary blip instead of abrupt drop
+            setTimeout(() => {
+              if (localStorage.getItem('ttrpg_active_room')) {
+                joinRoom(localStorage.getItem('ttrpg_active_room'));
+              } else {
+                disconnectRoom();
+              }
+            }, 1200);
           });
         });
 
         peerInstance.on('error', (err) => {
           console.error("PeerJS error:", err);
-          alert("Could not connect to room " + code + ". Make sure the DM has created the room!");
-          disconnectRoom();
+          // Retry briefly if network handshake glitched
+          setTimeout(() => {
+            if (localStorage.getItem('ttrpg_active_room')) {
+              joinRoom(localStorage.getItem('ttrpg_active_room'));
+            } else {
+              disconnectRoom();
+            }
+          }, 2000);
         });
       } catch (e) {
-        alert("Peer connection error: " + e.message);
         disconnectRoom();
       }
     }
@@ -1092,7 +1224,7 @@
       alert(`Room invite link copied!\nPlayers can open this link to join automatically: ${url}`);
     }
 
-    function disconnectRoom() {
+    function disconnectRoom(isSwitching) {
       if (peerInstance) {
         peerInstance.destroy();
         peerInstance = null;
@@ -1100,6 +1232,11 @@
       dmConnections = [];
       clientConnectionToDm = null;
       currentRoomCode = null;
+
+      if (!isSwitching) {
+        localStorage.removeItem('ttrpg_active_room');
+        removeUrlRoomParam();
+      }
 
       document.getElementById('sync-room-display').classList.add('hidden');
       document.getElementById('sync-room-display').classList.remove('flex');
@@ -1110,14 +1247,12 @@
     // --- BROADCAST & RECEIVE SYSTEM ---
     function broadcastRoll(rollPayload) {
       if (peerRole === 'dm') {
-        // DM broadcasts to all connected players if public
         if (rollPayload.visibility === 'public') {
           dmConnections.forEach(conn => {
             if (conn && conn.open) conn.send(rollPayload);
           });
         }
       } else {
-        // Player sends to DM
         if (clientConnectionToDm && clientConnectionToDm.open) {
           clientConnectionToDm.send(rollPayload);
         }
@@ -1128,20 +1263,19 @@
       if (!data) return;
 
       if (data.type === 'join') {
-        // DM receives player join notice
         tallyHistory.push({
           type: 'network',
           title: 'Player Joined',
           desc: `🛡 ${data.name} connected to the table.`,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         });
+        saveTallyState();
         updateTallyUI();
         return;
       }
 
       if (data.type === 'd20-roll') {
         if (peerRole === 'dm') {
-          // If DM received a public roll, relay it to all other players!
           if (data.visibility === 'public') {
             dmConnections.forEach(conn => {
               if (conn !== senderConn && conn.open) {
@@ -1149,7 +1283,6 @@
               }
             });
           } else if (data.visibility === 'secret') {
-            // Inform other players that a secret roll was made WITHOUT giving the number!
             const redacted = {
               type: 'd20-roll',
               rollerName: data.rollerName,
@@ -1168,9 +1301,43 @@
           }
         }
 
-        // Add to local audit list
         tallyHistory.push(data);
+        saveTallyState();
         updateTallyUI();
+        return;
+      }
+
+      if (data.type === 'damage-sync') {
+        if (peerRole === 'dm') {
+          if (data.visibility === 'public') {
+            dmConnections.forEach(conn => {
+              if (conn !== senderConn && conn.open) {
+                conn.send(data);
+              }
+            });
+          } else if (data.visibility === 'secret') {
+            const redacted = {
+              type: 'damage-sync',
+              rollerName: data.rollerName,
+              role: data.role,
+              visibility: 'secret-redacted',
+              desc: `${data.rollerName} rolled damage secretly to the DM.`,
+              val: '?',
+              runningTotal: '?',
+              time: data.time
+            };
+            dmConnections.forEach(conn => {
+              if (conn !== senderConn && conn.open) {
+                conn.send(redacted);
+              }
+            });
+          }
+        }
+
+        tallyHistory.push(data);
+        saveTallyState();
+        updateTallyUI();
+        return;
       }
     }
 
@@ -1227,17 +1394,16 @@
         time: timeStr
       };
 
-      // Add to own local audit log
       tallyHistory.push(rollPayload);
+      saveTallyState();
       updateTallyUI();
 
-      // If connected to room and not set to 'self', broadcast!
       if (visibility !== 'self') {
         broadcastRoll(rollPayload);
       }
     }
 
-    // --- CUMULATIVE DAMAGE TALLY ---
+    // --- CUMULATIVE DAMAGE TALLY WITH VISIBILITY & SYNC ---
     function updateTallyUI() {
       document.getElementById('tally-total').innerText = tallyTotal;
       const list = document.getElementById('tally-history-list');
@@ -1250,7 +1416,6 @@
         if (item.type === 'd20-roll' || item.type === 'check') {
           const isSecret = item.visibility === 'secret';
           const isRedacted = item.visibility === 'secret-redacted';
-          const isSelf = item.visibility === 'self';
           const rollerTag = item.rollerName ? `<span class="text-slate-300 font-bold">${item.rollerName}</span>` : '';
 
           return `
@@ -1267,6 +1432,26 @@
               </div>
               <div class="text-right">
                 <span class="font-extrabold text-base font-mono-math ${isSecret ? 'text-purple-300' : 'text-indigo-300'}">${item.val}</span>
+                <span class="text-[9px] text-slate-500 block">${item.time}</span>
+              </div>
+            </div>
+          `;
+        } else if (item.type === 'damage-sync') {
+          const isSecret = item.visibility === 'secret';
+          const isRedacted = item.visibility === 'secret-redacted';
+          const rollerTag = item.rollerName ? `<span class="text-slate-300 font-bold">${item.rollerName}</span>` : '';
+
+          return `
+            <div class="flex items-start justify-between p-2.5 ${isSecret ? 'bg-purple-950/25 border-purple-800/60' : 'bg-amber-950/20 border-amber-900/40'} rounded-lg border">
+              <div>
+                <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
+                  ${isSecret ? '<span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-purple-950 text-purple-300 border border-purple-600">🤫 Secret to DM</span>' : isRedacted ? '<span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-slate-800 text-slate-400 border border-slate-700">🤫 Secret Damage</span>' : '<span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-amber-950 text-amber-300 border border-amber-800">📢 Damage Roll</span>'}
+                  ${rollerTag}
+                </div>
+                <div class="text-[11px] ${isRedacted ? 'text-slate-500 italic' : 'text-slate-300 font-mono-math'}">${item.desc}</div>
+              </div>
+              <div class="text-right">
+                <span class="font-extrabold text-base font-mono-math ${isSecret ? 'text-purple-300' : 'text-amber-400'}">${item.val !== '?' && item.val >= 0 ? '+' + item.val : item.val}</span>
                 <span class="text-[9px] text-slate-500 block">${item.time}</span>
               </div>
             </div>
@@ -1298,17 +1483,18 @@
             </div>
           `;
         } else {
+          const isSecret = item.visibility === 'secret';
           return `
-            <div class="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+            <div class="flex items-center justify-between p-2.5 ${isSecret ? 'bg-purple-950/25 border-purple-800/60' : 'bg-slate-900/60 border-slate-800'} rounded-lg border">
               <div>
                 <div class="flex items-center gap-1.5 mb-0.5">
-                  <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-amber-950 text-amber-300 border border-amber-800">Damage</span>
+                  ${isSecret ? '<span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-purple-950 text-purple-300 border border-purple-600">🤫 Secret</span>' : '<span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-amber-950 text-amber-300 border border-amber-800">Damage</span>'}
                   <span class="text-xs text-slate-300">${item.desc}</span>
                 </div>
                 <span class="text-[10px] text-slate-500 font-mono-math">Pool: ${item.runningTotal}</span>
               </div>
               <div class="text-right">
-                <span class="font-bold text-sm font-mono-math ${item.val >= 0 ? 'text-amber-400' : 'text-rose-400'}">${item.val >= 0 ? '+' + item.val : item.val}</span>
+                <span class="font-bold text-sm font-mono-math ${isSecret ? 'text-purple-300' : (item.val >= 0 ? 'text-amber-400' : 'text-rose-400')}">${item.val >= 0 ? '+' + item.val : item.val}</span>
                 <span class="text-[9px] text-slate-500 block">${item.time}</span>
               </div>
             </div>
@@ -1323,14 +1509,38 @@
       tallyTotal += val;
       const now = new Date();
       const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      tallyHistory.push({
+
+      const visInput = document.querySelector('input[name="damage-visibility"]:checked');
+      const visibility = visInput ? visInput.value : 'public';
+      const myName = getMyName();
+
+      const item = {
         type: 'damage',
         desc: desc || `+${val}`,
         val: val,
+        visibility: visibility,
+        rollerName: myName,
         runningTotal: tallyTotal,
         time: timeStr
-      });
+      };
+
+      tallyHistory.push(item);
+      saveTallyState();
       updateTallyUI();
+
+      if (visibility !== 'self') {
+        const payload = {
+          type: 'damage-sync',
+          rollerName: myName,
+          role: peerRole,
+          visibility: visibility,
+          desc: desc || `Damage added: +${val}`,
+          val: val,
+          runningTotal: tallyTotal,
+          time: timeStr
+        };
+        broadcastRoll(payload);
+      }
     }
 
     function rollDamageDie(sides) {
@@ -1369,6 +1579,7 @@
         runningTotal: tallyTotal,
         time: timeStr
       });
+      saveTallyState();
       updateTallyUI();
     }
 
@@ -1384,21 +1595,22 @@
         runningTotal: tallyTotal,
         time: timeStr
       });
+      saveTallyState();
       updateTallyUI();
     }
 
     function undoLastTally() {
       if (tallyHistory.length === 0) return;
-      // Find the last damage entry to undo from running tally
       const lastDamageIndex = tallyHistory.slice().reverse().findIndex(item => item.type === 'damage');
       if (lastDamageIndex !== -1) {
         const actualIndex = tallyHistory.length - 1 - lastDamageIndex;
         const removed = tallyHistory.splice(actualIndex, 1)[0];
         tallyTotal -= removed.val;
+        saveTallyState();
         updateTallyUI();
       } else {
-        // Otherwise pop the last entry
         tallyHistory.pop();
+        saveTallyState();
         updateTallyUI();
       }
     }
@@ -1414,12 +1626,14 @@
         desc: `Damage pool cleared (was ${prev})`,
         time: timeStr
       });
+      saveTallyState();
       updateTallyUI();
     }
 
     function clearAuditHistory() {
       if (confirm('Clear the entire roll and damage history log?')) {
         tallyHistory = [];
+        saveTallyState();
         updateTallyUI();
       }
     }
@@ -1433,7 +1647,7 @@
       }
     });
 
-    // --- 3D GEOMETRY / PYTHAGOREAN ---
+    // --- 3D GEOMETRY / PYTHAGOREAN (WITH REACH & GROUND CHECK HIGHLIGHTING) ---
     function updateGeometryMath() {
       const target = document.getElementById('geo-solve-target').value;
       const groupA = document.getElementById('input-group-a');
@@ -1514,17 +1728,17 @@
       document.getElementById('geo-res-dnd').innerText = Math.round(resultDnd) + ' ft';
       document.getElementById('geo-res-chebyshev').innerText = Math.round(resultChebyshev) + ' ft';
 
-      // Update Generic Ranges (5 ft to 600 ft)
+      // Update Generic Ranges (In Reach: Green, Out of Reach: Red/Faded)
       const allRanges = [5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 90, 100, 120, 150, 300, 320, 400, 500, 600];
       allRanges.forEach(r => {
         const el = document.getElementById('generic-range-' + r);
         if (el) {
           if (resultEuclid <= r) {
-            el.className = "text-[11px] px-2 py-1 rounded border border-emerald-500 bg-emerald-950/70 text-emerald-300 font-bold font-mono-math shadow-sm";
+            el.className = "text-[11px] px-2 py-1 rounded border border-emerald-500/80 bg-emerald-950/80 text-emerald-300 font-bold font-mono-math shadow-sm";
             el.innerText = `✓ ${r} ft`;
           } else {
-            el.className = "text-[11px] px-2 py-1 rounded border border-slate-800 bg-slate-900 text-slate-500 line-through font-mono-math opacity-50";
-            el.innerText = `${r} ft`;
+            el.className = "text-[11px] px-2 py-1 rounded border border-rose-950/60 bg-rose-950/20 text-rose-400/60 font-mono-math line-through opacity-60";
+            el.innerText = `✗ ${r} ft`;
           }
         }
       });
@@ -1564,7 +1778,7 @@ Stray Remainder: ${rem}`;
       alert('Loot summary copied to clipboard!');
     }
 
-    // --- SCRATCHPAD & NOTES ---
+    // --- SCRATCHPAD & NOTES (PERSISTENT IN LOCAL STORAGE) ---
     function renderNotes() {
       const container = document.getElementById('notes-list-container');
       if (!container) return;
@@ -1596,6 +1810,7 @@ Stray Remainder: ${rem}`;
         `;
         container.appendChild(card);
       });
+      saveNotesState();
     }
 
     function saveQuickNote() {
@@ -1616,26 +1831,6 @@ Stray Remainder: ${rem}`;
 
       document.getElementById('note-body-input').value = '';
       renderNotes();
-    calculateSimpleMath();
-    renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
     }
 
     function togglePinNote(id) {
@@ -1644,112 +1839,37 @@ Stray Remainder: ${rem}`;
         n.pinned = !n.pinned;
         sessionNotes.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
         renderNotes();
-    calculateSimpleMath();
-    renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
       }
     }
 
     function deleteNote(id) {
       sessionNotes = sessionNotes.filter(x => x.id !== id);
       renderNotes();
-    calculateSimpleMath();
-    renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
     }
 
     function filterNotes(cat) {
       activeNoteFilter = cat;
       renderNotes();
-    calculateSimpleMath();
-    renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
     }
 
     function copyAllNotes() {
-      const md = sessionNotes.map(n => `### [${n.category}] (${n.time})
-${n.text}
-`).join('\n---\n\n');
+      const md = sessionNotes.map(n => `### [${n.category}] (${n.time})\n${n.text}\n`).join('\n---\n\n');
       navigator.clipboard.writeText(md);
       alert('All notes copied to clipboard as Markdown!');
     }
 
-    
-    
-    // --- INITIATIVE & ROUND TRACKER STATE ---
-    let combatRound = 1;
-    let initiativeList = [
-      { id: 'init-1', name: 'Valiant Paladin', init: 19, conditions: [] },
-      { id: 'init-2', name: 'Goblin Raider 1', init: 14, conditions: ['Prone'] },
-      { id: 'init-3', name: 'Dread Archmage', init: 11, conditions: ['Concentrating'] }
-    ];
-
-    const ALL_DND_CONDITIONS = [
-      'Blinded', 'Charmed', 'Deafened', 'Frightened', 'Grappled',
-      'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified',
-      'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious', 'Concentrating'
-    ];
-
+    // --- INITIATIVE & ROUND TRACKER (PERSISTENT IN LOCAL STORAGE) ---
     function adjustRound(delta) {
       combatRound = Math.max(1, combatRound + delta);
       document.getElementById('round-counter-display').innerText = `Round ${combatRound}`;
+      saveInitiativeState();
     }
 
     function resetRound() {
       if (confirm('Reset combat round back to Round 1?')) {
         combatRound = 1;
         document.getElementById('round-counter-display').innerText = `Round 1`;
+        saveInitiativeState();
       }
     }
 
@@ -1774,71 +1894,17 @@ ${n.text}
     function sortInitiative() {
       initiativeList.sort((a, b) => Number(b.init) - Number(a.init));
       renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
     }
 
     function removeInitiative(id) {
       initiativeList = initiativeList.filter(x => x.id !== id);
       renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
     }
 
     function clearInitiativeOrder() {
       if (confirm('Clear the entire initiative order?')) {
         initiativeList = [];
         renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
       }
     }
 
@@ -1846,6 +1912,7 @@ ${n.text}
       const item = initiativeList.find(x => x.id === id);
       if (item) {
         item.init = Number(val) || 0;
+        saveInitiativeState();
       }
     }
 
@@ -1918,24 +1985,6 @@ ${n.text}
             item.conditions.push(conditionToAdd);
           }
           renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
         }
       }
 
@@ -1955,24 +2004,6 @@ ${n.text}
       if (item && item.conditions) {
         item.conditions = item.conditions.filter(c => c !== condName);
         renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
       }
     }
 
@@ -1983,6 +2014,7 @@ ${n.text}
 
       if (initiativeList.length === 0) {
         container.innerHTML = '<div class="text-slate-500 italic text-center py-6 text-xs">Initiative order is empty.</div>';
+        saveInitiativeState();
         return;
       }
 
@@ -2018,6 +2050,7 @@ ${n.text}
         `;
         container.appendChild(row);
       });
+      saveInitiativeState();
     }
 
     // --- SIMPLE MATH LOGIC ---
@@ -2041,25 +2074,6 @@ ${n.text}
       else sym.innerText = '÷';
 
       calculateSimpleMath();
-    renderInitiative();
-
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
-
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
     }
 
     function calculateSimpleMath() {
@@ -2103,31 +2117,47 @@ ${n.text}
       }
     }
 
-    // Initial Load
-    renderCombatants();
-    updateGeometryMath();
-    calculateLoot();
-    renderNotes();
-    calculateSimpleMath();
-    renderInitiative();
+    // --- INITIAL LOAD & AUTO-RECONNECT RESTORATION ---
+    window.addEventListener('DOMContentLoaded', () => {
+      // 1. Render all persistent local components
+      renderCombatants();
+      updateGeometryMath();
+      calculateLoot();
+      renderNotes();
+      calculateSimpleMath();
+      renderInitiative();
+      updateTallyUI();
+      document.getElementById('round-counter-display').innerText = `Round ${combatRound}`;
 
-    // Load saved user name
-    const savedName = localStorage.getItem('ttrpg_user_name');
-    if (savedName) {
-      const nameInput = document.getElementById('sync-user-name');
-      if (nameInput) nameInput.value = savedName;
-    }
+      // 2. Restore User Name & Role
+      const savedName = localStorage.getItem('ttrpg_user_name');
+      if (savedName) {
+        const nameInput = document.getElementById('sync-user-name');
+        if (nameInput) nameInput.value = savedName;
+      }
 
-    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomParam = urlParams.get('room');
-    if (roomParam) {
-      document.getElementById('sync-user-role').value = 'player';
-      changeUserRole();
-      const joinInp = document.getElementById('sync-join-input');
-      if (joinInp) joinInp.value = roomParam.toUpperCase();
-      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
-    }
+      const savedRole = localStorage.getItem('ttrpg_user_role');
+      if (savedRole) {
+        document.getElementById('sync-user-role').value = savedRole;
+        changeUserRole();
+      }
+
+      // 3. Seamless Auto-Reconnect on Refresh
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRoom = urlParams.get('room');
+      const storedRoom = localStorage.getItem('ttrpg_active_room');
+      const activeRoom = (urlRoom || storedRoom || '').toUpperCase();
+
+      if (activeRoom) {
+        if (peerRole === 'dm') {
+          setTimeout(() => createRoom(activeRoom), 400);
+        } else {
+          const joinInp = document.getElementById('sync-join-input');
+          if (joinInp) joinInp.value = activeRoom;
+          setTimeout(() => joinRoom(activeRoom), 400);
+        }
+      }
+    });
   </script>
 
   <!-- Condition Picker Modal Dialog -->
