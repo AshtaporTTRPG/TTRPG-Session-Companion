@@ -350,7 +350,7 @@
         if (!map) {
           map = L.map('map-container', {
             crs: L.CRS.Simple,
-            minZoom: -2,
+            minZoom: -3,
             maxZoom: 1.5,
             zoomSnap: 0.1,
             zoomDelta: 0.25,
@@ -363,8 +363,15 @@
         }
 
         imageOverlay = L.imageOverlay(activeMapConfig.file, bounds).addTo(map);
-        map.fitBounds(bounds);
-        map.setMaxBounds(bounds);
+
+        // Allow generous panning padding so widescreen screens don't pin the map to the corner
+        const paddedBounds = [[-h * 0.25, -w * 0.25], [h * 1.25, w * 1.25]];
+        map.setMaxBounds(paddedBounds);
+
+        // Calculate dead-center coordinates and fit smoothly in the middle
+        const centerLatLng = [h / 2, w / 2];
+        map.fitBounds(bounds, { animate: false, padding: [20, 20] });
+        map.panTo(centerLatLng, { animate: false });
 
         renderAllPins();
       };
@@ -383,7 +390,10 @@
 
     // Reset zoom directly to 100% 1:1 native scale to remove digital stretch blur
     function zoomToNative() {
-      if (map) {
+      if (map && imageOverlay) {
+        const center = imageOverlay.getBounds().getCenter();
+        map.setView(center, 0, { animate: true });
+      } else if (map) {
         map.setZoom(0, { animate: true });
       }
     }
