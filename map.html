@@ -23,6 +23,16 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: #12151c; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #2b3242; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #3d465c; }
+    
+    /* Hardware accelerated sharpness rules for raster maps */
+    .leaflet-image-layer {
+      image-rendering: -webkit-optimize-contrast !important;
+      image-rendering: high-quality !important;
+      transform: translateZ(0) !important;
+      -webkit-backface-visibility: hidden !important;
+      backface-visibility: hidden !important;
+    }
+    
     /* Leaflet popup dark theme customization */
     .leaflet-popup-content-wrapper {
       background: #141822 !important;
@@ -35,6 +45,7 @@
     .leaflet-popup-tip { background: #141822 !important; border: 1px solid #334155; }
     .leaflet-popup-close-button { color: #94a3b8 !important; padding: 6px !important; }
     .leaflet-popup-close-button:hover { color: #f87171 !important; }
+
     /* SVG Marker Animation */
     .pin-pulse {
       animation: pinDrop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -59,6 +70,11 @@
           <select id="map-select-dropdown" onchange="switchMap(this.value)" class="bg-slate-900 border border-slate-700 hover:border-amber-500/60 rounded-lg px-2.5 py-1 text-sm font-bold font-serif-title text-amber-300 focus:outline-none focus:border-amber-500 transition cursor-pointer">
             <option value="durin">🗺️ Continent of Durin</option>
             <option value="adrazzar">🏙️ Adrazzar Metropolis</option>
+            <option value="bifrostgard">🏙️ Bifrostgard City</option>
+            <option value="cosmos">🌌 The Cosmos</option>
+            <option value="canyon-post">🏘️ Canyon Post Station</option>
+            <option value="draconia">🪐 Draconia Plane</option>
+            <option value="fort-ranzha">🏰 Fort Ranzha City</option>
           </select>
           <span id="header-map-badge" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">Continent</span>
         </div>
@@ -80,10 +96,15 @@
   <!-- Realtime Multiplayer Sync & Tool Control Bar -->
   <div class="border-b border-slate-800 bg-[#0e1117] px-4 py-2 z-20 flex flex-wrap items-center justify-between gap-2.5 shadow-sm text-xs">
     
-    <!-- Left: Pin Placement & Filter Controls -->
+    <!-- Left: Pin Placement, 100% Sharp Button, & Filter Controls -->
     <div class="flex flex-wrap items-center gap-2">
       <button onclick="togglePinDropMode()" id="btn-drop-mode" class="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-slate-900 font-bold transition flex items-center gap-1.5 shadow">
         <span id="drop-mode-icon">📍</span> <span id="drop-mode-text">+ Drop Pin on Map</span>
+      </button>
+
+      <!-- Dedicated 100% Native Sharpness Button -->
+      <button onclick="zoomToNative()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/40 font-bold transition flex items-center gap-1 shadow-sm" title="Reset zoom to 100% native 1:1 pixel sharpness (removes zoom blur)">
+        <span>🔍</span> 100% Sharp
       </button>
 
       <div class="h-5 w-[1px] bg-slate-800 hidden sm:block mx-1"></div>
@@ -212,7 +233,7 @@
   </div>
 
   <script>
-    // --- CAMPAIGN MAPS REGISTRY ---
+    // --- CAMPAIGN MAPS REGISTRY (ALL 7 MAPS) ---
     const CAMPAIGN_MAPS = {
       durin: {
         id: 'durin',
@@ -229,6 +250,46 @@
         icon: '🏙️',
         file: 'adrazzar-city.webp',
         subtitle: 'Metropolis City Map & District Journal'
+      },
+      bifrostgard: {
+        id: 'bifrostgard',
+        name: 'Bifrostgard City',
+        type: 'City',
+        icon: '🏙️',
+        file: 'bifrostgard-city.webp',
+        subtitle: 'Northern City Map & District Journal'
+      },
+      cosmos: {
+        id: 'cosmos',
+        name: 'The Cosmos',
+        type: 'Cosmology',
+        icon: '🌌',
+        file: 'the-cosmos.webp',
+        subtitle: 'Celestial Spheres & Planar Navigation'
+      },
+      'canyon-post': {
+        id: 'canyon-post',
+        name: 'Canyon Post Station',
+        type: 'Town',
+        icon: '🏘️',
+        file: 'canyon-post-station-town.webp',
+        subtitle: 'Canyon Outpost & Trade Post'
+      },
+      draconia: {
+        id: 'draconia',
+        name: 'Draconia Plane',
+        type: 'Plane',
+        icon: '🪐',
+        file: 'draconia-plane.webp',
+        subtitle: 'Planar Realm & Draconic Territories'
+      },
+      'fort-ranzha': {
+        id: 'fort-ranzha',
+        name: 'Fort Ranzha City',
+        type: 'City',
+        icon: '🏰',
+        file: 'fort-ranzha-city.webp',
+        subtitle: 'Fortified Stronghold & Garrison Map'
       }
     };
 
@@ -255,7 +316,7 @@
 
     // --- INITIALIZE LEAFLET & LOAD MAP ---
     function initMap() {
-      // Check URL parameters for active map (?map=adrazzar or ?map=durin)
+      // Check URL parameters for active map (?map=cosmos or ?map=durin)
       const urlParams = new URLSearchParams(window.location.search);
       const requestedMap = urlParams.get('map');
       if (requestedMap && CAMPAIGN_MAPS[requestedMap.toLowerCase()]) {
@@ -275,9 +336,9 @@
       document.getElementById('header-map-badge').innerText = activeMapConfig.type;
       document.getElementById('header-map-subtitle').innerText = activeMapConfig.subtitle;
       document.getElementById('sidebar-map-heading').innerHTML = `<span>📜</span> ${activeMapConfig.name} Journal`;
-      document.getElementById('header-map-icon').innerText = activeMapConfig.type === 'City' ? '🏙️' : '🗺️';
+      document.getElementById('header-map-icon').innerText = activeMapConfig.icon;
 
-      // Load natural dimensions of the map image
+      // Load natural dimensions of the active map image
       const img = new Image();
       img.src = activeMapConfig.file;
 
@@ -290,14 +351,14 @@
           map = L.map('map-container', {
             crs: L.CRS.Simple,
             minZoom: -2,
-            maxZoom: 2,
-            zoomSnap: 0.25,
-            zoomDelta: 0.5,
+            maxZoom: 1.5,
+            zoomSnap: 0.1,
+            zoomDelta: 0.25,
+            wheelPxPerZoomLevel: 120,
             attributionControl: false
           });
           map.on('click', onMapClick);
         } else {
-          // Clear current overlay if switching
           if (imageOverlay) map.removeLayer(imageOverlay);
         }
 
@@ -312,12 +373,19 @@
         document.getElementById('map-container').innerHTML = `
           <div class="h-full w-full flex flex-col items-center justify-center p-6 text-center text-slate-400">
             <div class="text-4xl mb-3">⚠️</div>
-            <h2 class="text-lg font-serif-title text-amber-400 font-bold mb-1">${activeMapConfig.name} File Missing</h2>
+            <h2 class="text-lg font-serif-title text-amber-400 font-bold mb-1">${activeMapConfig.name} Missing</h2>
             <p class="text-xs text-slate-300 max-w-md">Looking for file: <code class="text-amber-300 font-mono-math">${activeMapConfig.file}</code> in your GitHub repo.</p>
-            <p class="text-[11px] text-slate-500 mt-2">Make sure you uploaded <strong class="text-slate-400">${activeMapConfig.file}</strong> directly into the same folder as <strong class="text-slate-400">map.html</strong>.</p>
+            <p class="text-[11px] text-slate-500 mt-2">Make sure you uploaded <strong class="text-slate-400">${activeMapConfig.file}</strong> directly into the same root folder as <strong class="text-slate-400">map.html</strong>.</p>
           </div>
         `;
       };
+    }
+
+    // Reset zoom directly to 100% 1:1 native scale to remove digital stretch blur
+    function zoomToNative() {
+      if (map) {
+        map.setZoom(0, { animate: true });
+      }
     }
 
     function switchMap(newMapId) {
@@ -332,7 +400,6 @@
         const stored = localStorage.getItem('durin_map_pins');
         if (stored) {
           allPins = JSON.parse(stored);
-          // Migrate older pins that didn't have mapId
           allPins.forEach(p => {
             if (!p.mapId) p.mapId = 'durin';
           });
@@ -354,7 +421,6 @@
 
     function updateHeaderCount() {
       const el = document.getElementById('header-pin-count');
-      // Count pins specifically on the active map
       const mapPins = allPins.filter(p => (p.mapId || 'durin') === activeMapId);
       if (el) el.innerText = mapPins.length;
     }
@@ -381,7 +447,7 @@
     function onMapClick(e) {
       if (!isDropMode) return;
       pendingCoords = [e.latlng.lat, e.latlng.lng];
-      togglePinDropMode(); // exit drop mode
+      togglePinDropMode();
       openCreatePinModal(pendingCoords);
     }
 
@@ -441,7 +507,6 @@
       const timeStr = now.toLocaleDateString([], { month: 'short', day: 'numeric' });
 
       if (editingPinId) {
-        // Update existing
         const p = allPins.find(x => x.id === editingPinId);
         if (p) {
           p.title = title;
@@ -453,7 +518,6 @@
           if (scope === 'group') broadcastMapPin(p, 'update');
         }
       } else {
-        // Create new pin locked to activeMapId
         const newPin = {
           id: 'pin-' + Date.now() + Math.random().toString(36).substr(2, 4),
           mapId: activeMapId,
@@ -510,15 +574,12 @@
     function renderAllPins() {
       if (!map) return;
 
-      // Clear existing markers
       Object.values(leafletMarkers).forEach(m => map.removeLayer(m));
       leafletMarkers = {};
 
-      // Filter pins strictly belonging to activeMapId
       const currentMapPins = allPins.filter(p => (p.mapId || 'durin') === activeMapId);
 
       currentMapPins.forEach(pin => {
-        // Apply active category / scope filter
         if (activeFilter === 'group' && pin.scope !== 'group') return;
         if (activeFilter === 'personal' && pin.scope !== 'personal') return;
         if (activeFilter !== 'all' && activeFilter !== 'group' && activeFilter !== 'personal') {
@@ -527,7 +588,6 @@
 
         const icon = createCustomPinIcon(pin.category, pin.scope);
         const marker = L.marker([pin.lat, pin.lng], { icon }).addTo(map);
-
         const cat = PIN_CATEGORIES[pin.category] || PIN_CATEGORIES.Note;
 
         const popupContent = `
@@ -580,13 +640,10 @@
       container.innerHTML = '';
 
       const query = (document.getElementById('sidebar-search-input')?.value || '').toLowerCase();
-
-      // Only search pins belonging to the active map
       const currentMapPins = allPins.filter(p => (p.mapId || 'durin') === activeMapId);
 
       const filtered = currentMapPins.filter(p => {
-        const matchesQuery = p.title.toLowerCase().includes(query) || (p.notes && p.notes.toLowerCase().includes(query));
-        return matchesQuery;
+        return p.title.toLowerCase().includes(query) || (p.notes && p.notes.toLowerCase().includes(query));
       });
 
       if (filtered.length === 0) {
@@ -734,7 +791,7 @@
       if (!peerRoomConn || !peerRoomConn.open) return;
       peerRoomConn.send({
         type: 'map-pin-sync',
-        action: action, // 'create', 'update', 'delete'
+        action: action,
         pin: pinData
       });
     }
