@@ -20,6 +20,7 @@
     }
     .animate-critical { animation: criticalPulse 1.6s infinite ease-in-out; }
   </style>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body class="min-h-screen flex flex-col bg-[#0d0f14] text-slate-200">
   <!-- Top Navigation Header -->
@@ -60,6 +61,57 @@
       </nav>
     </div>
   </header>
+
+  <!-- Table Multiplayer & Live Roll Sync Bar -->
+  <div class="border-b border-slate-800 bg-[#12151c]/95 px-4 py-2.5 shadow-sm">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+      
+      <!-- User Profile & Role -->
+      <div class="flex items-center gap-2">
+        <span class="text-slate-400 font-semibold">Your Name:</span>
+        <input type="text" id="sync-user-name" value="Player 1" onchange="saveUserProfile()" class="bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-slate-100 font-medium w-28 sm:w-36 focus:outline-none focus:border-amber-500">
+        
+        <select id="sync-user-role" onchange="changeUserRole()" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-amber-400 font-semibold focus:outline-none focus:border-amber-500">
+          <option value="player">🛡 Player</option>
+          <option value="dm">👑 Dungeon Master</option>
+        </select>
+      </div>
+
+      <!-- Room Connection Controls -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Status indicator badge -->
+        <span id="sync-status-badge" class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+          <span>Solo / Offline</span>
+        </span>
+
+        <!-- Host controls (Visible when DM) -->
+        <div id="sync-dm-controls" class="hidden flex items-center gap-1.5">
+          <button onclick="createRoom()" id="btn-create-room" class="px-3 py-1 bg-amber-600 hover:bg-amber-500 text-slate-900 font-bold rounded shadow transition">
+            👑 Host Room
+          </button>
+          <span id="sync-room-display" class="hidden items-center gap-1.5 font-mono-math bg-slate-900 px-2.5 py-1 rounded border border-slate-700 text-amber-300">
+            Room: <strong id="sync-room-code" class="text-white tracking-widest text-sm">-----</strong>
+            <button onclick="copyRoomLink()" class="text-amber-400 hover:underline ml-1" title="Copy Invite Link">📋 Link</button>
+          </span>
+        </div>
+
+        <!-- Join controls (Visible when Player) -->
+        <div id="sync-player-controls" class="flex items-center gap-1.5">
+          <input type="text" id="sync-join-input" placeholder="Room Code..." class="uppercase tracking-widest bg-slate-900 border border-slate-700 rounded px-2 py-1 text-center w-24 text-slate-200 font-mono-math focus:outline-none focus:border-indigo-500">
+          <button onclick="joinRoom()" id="btn-join-room" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-slate-100 font-bold rounded shadow transition">
+            Join Room
+          </button>
+        </div>
+
+        <button onclick="disconnectRoom()" id="btn-disconnect-room" class="hidden text-rose-400 hover:text-rose-300 px-2 py-1 text-[11px]">
+          Leave
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 
   <!-- Main Workspace -->
   <main class="max-w-7xl mx-auto w-full p-4 sm:p-6 flex-1 flex flex-col">
@@ -212,6 +264,25 @@
                 <button onclick="rollD20Check()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-slate-100 font-bold text-xs rounded-lg transition shadow-md flex items-center justify-center gap-1.5">
                   <span>🎲</span> Roll
                 </button>
+              </div>
+            </div>
+
+            <!-- Roll Visibility Selector -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800 text-xs">
+              <span class="text-slate-400 font-semibold">Share Roll:</span>
+              <div class="flex flex-wrap items-center gap-3">
+                <label class="flex items-center gap-1.5 cursor-pointer text-slate-300 hover:text-amber-300 transition">
+                  <input type="radio" name="d20-visibility" value="public" checked class="text-amber-500 focus:ring-0">
+                  <span class="font-medium">📢 Public (Whole Table)</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-purple-300 hover:text-purple-200 transition">
+                  <input type="radio" name="d20-visibility" value="secret" class="text-purple-500 focus:ring-0">
+                  <span class="font-medium">🤫 Secret (DM Only)</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer text-slate-400 hover:text-slate-200 transition">
+                  <input type="radio" name="d20-visibility" value="self" class="text-slate-500 focus:ring-0">
+                  <span>🔒 Local (Self Only)</span>
+                </label>
               </div>
             </div>
 
@@ -857,11 +928,260 @@
       renderCombatants();
     }
 
-    // --- D20 SYSTEM ROLLER (ATTACK, SKILL, SAVE) ---
+
+    // --- MULTIPLAYER REAL-TIME PEERJS NETWORKING ---
+    let peerInstance = null;
+    let peerRole = 'player'; // 'player' or 'dm'
+    let currentRoomCode = null;
+    let dmConnections = []; // used if I am DM: list of client conns
+    let clientConnectionToDm = null; // used if I am Player: conn to DM
+
+    function getMyName() {
+      const el = document.getElementById('sync-user-name');
+      return (el && el.value.trim()) ? el.value.trim() : (peerRole === 'dm' ? 'Dungeon Master' : 'Player');
+    }
+
+    function saveUserProfile() {
+      const name = getMyName();
+      localStorage.setItem('ttrpg_user_name', name);
+    }
+
+    function changeUserRole() {
+      peerRole = document.getElementById('sync-user-role').value;
+      const dmCtrl = document.getElementById('sync-dm-controls');
+      const playerCtrl = document.getElementById('sync-player-controls');
+      
+      if (peerRole === 'dm') {
+        dmCtrl.classList.remove('hidden');
+        playerCtrl.classList.add('hidden');
+      } else {
+        dmCtrl.classList.add('hidden');
+        playerCtrl.classList.remove('hidden');
+      }
+    }
+
+    function generateRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let res = '';
+      for (let i = 0; i < 5; i++) {
+        res += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return res;
+    }
+
+    function updateNetworkStatus(status, text) {
+      const badge = document.getElementById('sync-status-badge');
+      const btnDisconnect = document.getElementById('btn-disconnect-room');
+
+      if (status === 'connected') {
+        badge.className = "px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-600 flex items-center gap-1.5 shadow-sm";
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span>${text}</span>`;
+        btnDisconnect.classList.remove('hidden');
+      } else if (status === 'connecting') {
+        badge.className = "px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-950 text-amber-300 border border-amber-600 flex items-center gap-1.5";
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span><span>${text}</span>`;
+        btnDisconnect.classList.remove('hidden');
+      } else {
+        badge.className = "px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1.5";
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-500"></span><span>Solo / Offline</span>`;
+        btnDisconnect.classList.add('hidden');
+      }
+    }
+
+    // --- DM CREATES ROOM ---
+    function createRoom() {
+      if (peerInstance) disconnectRoom();
+      const code = generateRoomCode();
+      currentRoomCode = code;
+      const peerId = 'ttrpg-table-' + code.toLowerCase();
+
+      updateNetworkStatus('connecting', 'Creating Room...');
+
+      try {
+        peerInstance = new Peer(peerId);
+
+        peerInstance.on('open', (id) => {
+          document.getElementById('sync-room-code').innerText = code;
+          document.getElementById('sync-room-display').classList.remove('hidden');
+          document.getElementById('sync-room-display').classList.add('flex');
+          document.getElementById('btn-create-room').classList.add('hidden');
+          updateNetworkStatus('connected', `Room: ${code} (DM - 0 Players)`);
+        });
+
+        peerInstance.on('connection', (conn) => {
+          conn.on('open', () => {
+            dmConnections.push(conn);
+            updateNetworkStatus('connected', `Room: ${currentRoomCode} (${dmConnections.length} Connected)`);
+          });
+
+          conn.on('data', (data) => {
+            handleIncomingNetworkData(data, conn);
+          });
+
+          conn.on('close', () => {
+            dmConnections = dmConnections.filter(c => c !== conn);
+            updateNetworkStatus('connected', `Room: ${currentRoomCode} (${dmConnections.length} Connected)`);
+          });
+        });
+
+        peerInstance.on('error', (err) => {
+          console.error("PeerJS error:", err);
+          alert("Connection error: " + err.type + ". Try creating room again.");
+          disconnectRoom();
+        });
+      } catch (e) {
+        alert("PeerJS failed to initialize: " + e.message);
+        disconnectRoom();
+      }
+    }
+
+    // --- PLAYER JOINS ROOM ---
+    function joinRoom(autoCode) {
+      if (peerInstance) disconnectRoom();
+      const codeInput = document.getElementById('sync-join-input');
+      const code = (autoCode || (codeInput ? codeInput.value.trim() : '')).toUpperCase();
+      if (!code) {
+        alert("Please enter a 5-letter Room Code.");
+        return;
+      }
+
+      currentRoomCode = code;
+      const targetDmPeerId = 'ttrpg-table-' + code.toLowerCase();
+
+      updateNetworkStatus('connecting', `Connecting to ${code}...`);
+
+      try {
+        peerInstance = new Peer();
+
+        peerInstance.on('open', () => {
+          clientConnectionToDm = peerInstance.connect(targetDmPeerId, { reliable: true });
+
+          clientConnectionToDm.on('open', () => {
+            updateNetworkStatus('connected', `Connected to Room ${code}`);
+            clientConnectionToDm.send({
+              type: 'join',
+              name: getMyName()
+            });
+          });
+
+          clientConnectionToDm.on('data', (data) => {
+            handleIncomingNetworkData(data);
+          });
+
+          clientConnectionToDm.on('close', () => {
+            alert("Disconnected from DM Room.");
+            disconnectRoom();
+          });
+        });
+
+        peerInstance.on('error', (err) => {
+          console.error("PeerJS error:", err);
+          alert("Could not connect to room " + code + ". Make sure the DM has created the room!");
+          disconnectRoom();
+        });
+      } catch (e) {
+        alert("Peer connection error: " + e.message);
+        disconnectRoom();
+      }
+    }
+
+    function copyRoomLink() {
+      if (!currentRoomCode) return;
+      const url = window.location.origin + window.location.pathname + '?room=' + currentRoomCode;
+      navigator.clipboard.writeText(url);
+      alert(`Room invite link copied!\nPlayers can open this link to join automatically: ${url}`);
+    }
+
+    function disconnectRoom() {
+      if (peerInstance) {
+        peerInstance.destroy();
+        peerInstance = null;
+      }
+      dmConnections = [];
+      clientConnectionToDm = null;
+      currentRoomCode = null;
+
+      document.getElementById('sync-room-display').classList.add('hidden');
+      document.getElementById('sync-room-display').classList.remove('flex');
+      document.getElementById('btn-create-room').classList.remove('hidden');
+      updateNetworkStatus('offline', 'Solo / Offline');
+    }
+
+    // --- BROADCAST & RECEIVE SYSTEM ---
+    function broadcastRoll(rollPayload) {
+      if (peerRole === 'dm') {
+        // DM broadcasts to all connected players if public
+        if (rollPayload.visibility === 'public') {
+          dmConnections.forEach(conn => {
+            if (conn && conn.open) conn.send(rollPayload);
+          });
+        }
+      } else {
+        // Player sends to DM
+        if (clientConnectionToDm && clientConnectionToDm.open) {
+          clientConnectionToDm.send(rollPayload);
+        }
+      }
+    }
+
+    function handleIncomingNetworkData(data, senderConn) {
+      if (!data) return;
+
+      if (data.type === 'join') {
+        // DM receives player join notice
+        tallyHistory.push({
+          type: 'network',
+          title: 'Player Joined',
+          desc: `🛡 ${data.name} connected to the table.`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+        updateTallyUI();
+        return;
+      }
+
+      if (data.type === 'd20-roll') {
+        if (peerRole === 'dm') {
+          // If DM received a public roll, relay it to all other players!
+          if (data.visibility === 'public') {
+            dmConnections.forEach(conn => {
+              if (conn !== senderConn && conn.open) {
+                conn.send(data);
+              }
+            });
+          } else if (data.visibility === 'secret') {
+            // Inform other players that a secret roll was made WITHOUT giving the number!
+            const redacted = {
+              type: 'd20-roll',
+              rollerName: data.rollerName,
+              role: data.role,
+              visibility: 'secret-redacted',
+              checkType: data.checkType,
+              desc: `${data.rollerName} made a secret check to the DM.`,
+              val: '?',
+              time: data.time
+            };
+            dmConnections.forEach(conn => {
+              if (conn !== senderConn && conn.open) {
+                conn.send(redacted);
+              }
+            });
+          }
+        }
+
+        // Add to local audit list
+        tallyHistory.push(data);
+        updateTallyUI();
+      }
+    }
+
+    // --- D20 SYSTEM ROLLER (ATTACK, SKILL, SAVE & MULTIPLAYER VISIBILITY) ---
     function rollD20Check() {
       const checkType = document.getElementById('d20-check-type').value;
       const mod = parseInt(document.getElementById('d20-mod-input').value) || 0;
       const bonusSides = parseInt(document.getElementById('d20-bonus-die').value) || 0;
+
+      const visInput = document.querySelector('input[name="d20-visibility"]:checked');
+      const visibility = visInput ? visInput.value : 'public';
 
       const d20 = Math.floor(Math.random() * 20) + 1;
       let bonusRoll = 0;
@@ -886,21 +1206,35 @@
       let breakdown = `d20: ${d20} ${mod >= 0 ? '+ ' + mod : '- ' + Math.abs(mod)}`;
       if (bonusSides > 0) breakdown += ` + 1d${bonusSides} (${bonusRoll})`;
       breakdown += ` = ${total}`;
-      document.getElementById('d20-breakdown-text').innerText = `${checkType}: ${breakdown}`;
+      
+      const visLabel = visibility === 'public' ? '📢 Public' : visibility === 'secret' ? '🤫 Secret to DM' : '🔒 Local';
+      document.getElementById('d20-breakdown-text').innerText = `${checkType} (${visLabel}): ${breakdown}`;
 
-      // Log to audit history (standalone - NEVER added to damage tally)
       const now = new Date();
       const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      tallyHistory.push({
-        type: 'check',
-        title: checkType,
+      const myName = getMyName();
+
+      const rollPayload = {
+        type: 'd20-roll',
+        rollerName: myName,
+        role: peerRole,
+        visibility: visibility,
+        checkType: checkType,
         desc: breakdown,
         val: total,
         isCrit: d20 === 20,
         isFumble: d20 === 1,
         time: timeStr
-      });
+      };
+
+      // Add to own local audit log
+      tallyHistory.push(rollPayload);
       updateTallyUI();
+
+      // If connected to room and not set to 'self', broadcast!
+      if (visibility !== 'self') {
+        broadcastRoll(rollPayload);
+      }
     }
 
     // --- CUMULATIVE DAMAGE TALLY ---
@@ -913,22 +1247,35 @@
       }
 
       list.innerHTML = tallyHistory.slice().reverse().map((item) => {
-        if (item.type === 'check') {
+        if (item.type === 'd20-roll' || item.type === 'check') {
+          const isSecret = item.visibility === 'secret';
+          const isRedacted = item.visibility === 'secret-redacted';
+          const isSelf = item.visibility === 'self';
+          const rollerTag = item.rollerName ? `<span class="text-slate-300 font-bold">${item.rollerName}</span>` : '';
+
           return `
-            <div class="flex items-start justify-between p-2.5 bg-indigo-950/20 rounded-lg border border-indigo-900/40">
+            <div class="flex items-start justify-between p-2.5 ${isSecret ? 'bg-purple-950/25 border-purple-800/60' : 'bg-indigo-950/20 border-indigo-900/40'} rounded-lg border">
               <div>
-                <div class="flex items-center gap-1.5 mb-0.5">
-                  <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-indigo-950 text-indigo-300 border border-indigo-700">d20 Check</span>
-                  <span class="text-xs font-semibold text-slate-200">${item.title}</span>
+                <div class="flex flex-wrap items-center gap-1.5 mb-0.5">
+                  ${isSecret ? '<span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-purple-950 text-purple-300 border border-purple-600">🤫 Secret to DM</span>' : isRedacted ? '<span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-slate-800 text-slate-400 border border-slate-700">🤫 Secret Roll</span>' : '<span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-indigo-950 text-indigo-300 border border-indigo-700">📢 d20 Check</span>'}
+                  ${rollerTag}
+                  <span class="text-xs font-semibold text-slate-200">(${item.checkType || item.title})</span>
                   ${item.isCrit ? '<span class="text-[9px] px-1 bg-emerald-950 text-emerald-300 border border-emerald-600 rounded font-bold">NAT 20</span>' : ''}
                   ${item.isFumble ? '<span class="text-[9px] px-1 bg-rose-950 text-rose-300 border border-rose-600 rounded font-bold">NAT 1</span>' : ''}
                 </div>
-                <div class="text-[11px] text-slate-400 font-mono-math">${item.desc}</div>
+                <div class="text-[11px] ${isRedacted ? 'text-slate-500 italic' : 'text-slate-400 font-mono-math'}">${item.desc}</div>
               </div>
               <div class="text-right">
-                <span class="font-extrabold text-base font-mono-math text-indigo-300">${item.val}</span>
+                <span class="font-extrabold text-base font-mono-math ${isSecret ? 'text-purple-300' : 'text-indigo-300'}">${item.val}</span>
                 <span class="text-[9px] text-slate-500 block">${item.time}</span>
               </div>
+            </div>
+          `;
+        } else if (item.type === 'network') {
+          return `
+            <div class="flex items-center justify-between p-2 bg-indigo-950/30 rounded-lg border border-indigo-800/40">
+              <span class="text-xs text-indigo-200 font-medium">${item.desc}</span>
+              <span class="text-[9px] text-slate-500">${item.time}</span>
             </div>
           `;
         } else if (item.type === 'drain') {
@@ -1271,6 +1618,24 @@ Stray Remainder: ${rem}`;
       renderNotes();
     calculateSimpleMath();
     renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
     }
 
     function togglePinNote(id) {
@@ -1281,6 +1646,24 @@ Stray Remainder: ${rem}`;
         renderNotes();
     calculateSimpleMath();
     renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
       }
     }
 
@@ -1289,6 +1672,24 @@ Stray Remainder: ${rem}`;
       renderNotes();
     calculateSimpleMath();
     renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
     }
 
     function filterNotes(cat) {
@@ -1296,6 +1697,24 @@ Stray Remainder: ${rem}`;
       renderNotes();
     calculateSimpleMath();
     renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
     }
 
     function copyAllNotes() {
@@ -1355,17 +1774,71 @@ ${n.text}
     function sortInitiative() {
       initiativeList.sort((a, b) => Number(b.init) - Number(a.init));
       renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
     }
 
     function removeInitiative(id) {
       initiativeList = initiativeList.filter(x => x.id !== id);
       renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
     }
 
     function clearInitiativeOrder() {
       if (confirm('Clear the entire initiative order?')) {
         initiativeList = [];
         renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
       }
     }
 
@@ -1445,6 +1918,24 @@ ${n.text}
             item.conditions.push(conditionToAdd);
           }
           renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
         }
       }
 
@@ -1464,6 +1955,24 @@ ${n.text}
       if (item && item.conditions) {
         item.conditions = item.conditions.filter(c => c !== condName);
         renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
       }
     }
 
@@ -1533,6 +2042,24 @@ ${n.text}
 
       calculateSimpleMath();
     renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
     }
 
     function calculateSimpleMath() {
@@ -1583,6 +2110,24 @@ ${n.text}
     renderNotes();
     calculateSimpleMath();
     renderInitiative();
+
+    // Load saved user name
+    const savedName = localStorage.getItem('ttrpg_user_name');
+    if (savedName) {
+      const nameInput = document.getElementById('sync-user-name');
+      if (nameInput) nameInput.value = savedName;
+    }
+
+    // Auto-join room from URL parameter (e.g. ?room=DRAGN)
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    if (roomParam) {
+      document.getElementById('sync-user-role').value = 'player';
+      changeUserRole();
+      const joinInp = document.getElementById('sync-join-input');
+      if (joinInp) joinInp.value = roomParam.toUpperCase();
+      setTimeout(() => joinRoom(roomParam.toUpperCase()), 500);
+    }
   </script>
 
   <!-- Condition Picker Modal Dialog -->
