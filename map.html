@@ -26,11 +26,12 @@
     
     /* Hardware accelerated sharpness rules for raster maps */
     .leaflet-image-layer {
-      image-rendering: -webkit-optimize-contrast !important;
-      image-rendering: high-quality !important;
-      transform: translateZ(0) !important;
-      -webkit-backface-visibility: hidden !important;
-      backface-visibility: hidden !important;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+    .custom-map-marker {
+      background: transparent !important;
+      border: none !important;
     }
     
     /* Leaflet popup dark theme customization */
@@ -125,18 +126,31 @@
     </div>
 
     <!-- Right: Room Sync with Main Companion -->
-    <div class="flex items-center gap-2">
-      <input type="text" id="sync-user-name" value="Player" onchange="saveUserName()" placeholder="Name" class="w-24 sm:w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 font-medium focus:outline-none focus:border-amber-500">
+    <div class="flex flex-wrap items-center gap-2">
+      <input type="text" id="sync-user-name" value="Player" onchange="saveUserName()" placeholder="Name" class="w-20 sm:w-24 bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200 font-medium focus:outline-none focus:border-amber-500">
       
+      <!-- Role Selector -->
+      <select id="sync-user-role" onchange="changeMapUserRole()" class="bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-amber-400 font-semibold focus:outline-none focus:border-amber-500">
+        <option value="player">🛡 Player</option>
+        <option value="dm">👑 DM</option>
+      </select>
+
       <span id="sync-status-badge" class="px-2 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1">
         <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
         <span id="sync-status-text">Offline</span>
       </span>
 
-      <!-- Room Input / Connect -->
-      <div id="room-input-container" class="flex items-center gap-1">
+      <!-- DM Host Button -->
+      <div id="sync-dm-controls" class="hidden items-center gap-1.5">
+        <button onclick="createRoom()" id="btn-create-room" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-slate-900 font-bold rounded shadow transition">
+          👑 Host
+        </button>
+      </div>
+
+      <!-- Player Room Input / Connect -->
+      <div id="sync-player-controls" class="flex items-center gap-1">
         <input type="text" id="map-room-input" placeholder="Room Code" class="w-20 uppercase bg-slate-900 border border-slate-700 rounded px-1.5 py-1 text-center font-mono-math text-amber-300 font-bold focus:outline-none focus:border-amber-500">
-        <button onclick="connectToRoom()" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-slate-100 rounded font-bold transition">Sync</button>
+        <button onclick="connectToRoom()" class="px-2 py-1 bg-indigo-600 hover:bg-indigo-500 text-slate-100 rounded font-bold transition">Join</button>
       </div>
 
       <button onclick="disconnectRoom()" id="btn-disconnect-room" class="hidden text-rose-400 hover:underline text-[11px] px-1">Leave</button>
@@ -316,7 +330,6 @@
 
     // --- INITIALIZE LEAFLET & LOAD MAP ---
     function initMap() {
-      // Check URL parameters for active map (?map=cosmos or ?map=durin)
       const urlParams = new URLSearchParams(window.location.search);
       const requestedMap = urlParams.get('map');
       if (requestedMap && CAMPAIGN_MAPS[requestedMap.toLowerCase()]) {
@@ -325,7 +338,7 @@
 
       loadLocalPins();
       setupMapViewer();
-      checkUrlForRoom();
+      restoreMapSession();
     }
 
     function setupMapViewer() {
@@ -468,7 +481,7 @@
       document.getElementById('modal-map-indicator').innerText = `Map: ${activeMapConfig.name} (${activeMapConfig.type})`;
       document.getElementById('pin-title-input').value = '';
       document.getElementById('pin-category-select').value = 'Town';
-      document.getElementById('pin-scope-select').value = peerInstance ? 'group' : 'personal';
+      document.getElementById('pin-scope-select').value = 'group';
       document.getElementById('pin-notes-input').value = '';
 
       const modal = document.getElementById('pin-modal');
@@ -562,7 +575,7 @@
       }
     }
 
-    // --- LEAFLET MARKERS RENDERING ---
+    // --- LEAFLET MARKERS RENDERING (PERFECT ANCHORING) ---
     function createCustomPinIcon(catKey, scope) {
       const cat = PIN_CATEGORIES[catKey] || PIN_CATEGORIES.Note;
       const isGroup = scope === 'group';
@@ -706,34 +719,151 @@
       downloadAnchor.remove();
     }
 
-    // --- PEERJS MULTIPLAYER SYNC (SHARED WITH COMPANION) ---
+    // --- PEERJS MULTIPLAYER SYNC (BIDIRECTIONAL BROADCAST & BULK HYDRATION) ---
     let peerInstance = null;
-    let peerRoomConn = null;
+    let mapPeerRole = 'player'; // 'player' or 'dm'
     let currentMapRoomCode = null;
+    let clientConnectionToDm = null; // if Player: conn to DM
+    let dmClientConnections = []; // if DM: list of player conns
 
     function getUserName() {
       const el = document.getElementById('sync-user-name');
-      return (el && el.value.trim()) ? el.value.trim() : 'Explorer';
+      return (el && el.value.trim()) ? el.value.trim() : (mapPeerRole === 'dm' ? 'Dungeon Master' : 'Player');
     }
 
     function saveUserName() {
       localStorage.setItem('ttrpg_user_name', getUserName());
     }
 
-    function checkUrlForRoom() {
-      const saved = localStorage.getItem('ttrpg_user_name');
-      if (saved) document.getElementById('sync-user-name').value = saved;
+    function changeMapUserRole() {
+      mapPeerRole = document.getElementById('sync-user-role').value;
+      localStorage.setItem('ttrpg_user_role', mapPeerRole);
+      const dmCtrl = document.getElementById('sync-dm-controls');
+      const playerCtrl = document.getElementById('sync-player-controls');
 
-      const urlParams = new URLSearchParams(window.location.search);
-      const room = urlParams.get('room');
-      if (room) {
-        document.getElementById('map-room-input').value = room.toUpperCase();
-        connectToRoom(room.toUpperCase());
+      if (mapPeerRole === 'dm') {
+        dmCtrl.classList.remove('hidden');
+        dmCtrl.classList.add('flex');
+        playerCtrl.classList.add('hidden');
+      } else {
+        dmCtrl.classList.add('hidden');
+        dmCtrl.classList.remove('flex');
+        playerCtrl.classList.remove('hidden');
       }
     }
 
+    function generateRoomCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let res = '';
+      for (let i = 0; i < 5; i++) {
+        res += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return res;
+    }
+
+    function updateUrlRoomParam(code) {
+      try {
+        const url = new URL(window.location);
+        url.searchParams.set('room', code);
+        window.history.replaceState({}, '', url);
+      } catch (e) {}
+    }
+
+    function removeUrlRoomParam() {
+      try {
+        const url = new URL(window.location);
+        url.searchParams.delete('room');
+        window.history.replaceState({}, '', url);
+      } catch (e) {}
+    }
+
+    function restoreMapSession() {
+      const savedName = localStorage.getItem('ttrpg_user_name');
+      if (savedName) document.getElementById('sync-user-name').value = savedName;
+
+      const savedRole = localStorage.getItem('ttrpg_user_role');
+      if (savedRole) {
+        document.getElementById('sync-user-role').value = savedRole;
+        changeMapUserRole();
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRoom = urlParams.get('room');
+      const storedRoom = localStorage.getItem('ttrpg_active_room');
+      const activeRoom = (urlRoom || storedRoom || '').toUpperCase();
+
+      if (activeRoom) {
+        if (mapPeerRole === 'dm') {
+          setTimeout(() => createRoom(activeRoom), 300);
+        } else {
+          document.getElementById('map-room-input').value = activeRoom;
+          setTimeout(() => connectToRoom(activeRoom), 300);
+        }
+      }
+    }
+
+    // --- DM HOSTS MAP ROOM ---
+    function createRoom(reconnectCode) {
+      if (peerInstance) disconnectRoom(true);
+      const code = (reconnectCode || generateRoomCode()).toUpperCase();
+      currentMapRoomCode = code;
+      const peerId = 'ttrpg-table-' + code.toLowerCase();
+
+      localStorage.setItem('ttrpg_active_room', code);
+      localStorage.setItem('ttrpg_user_role', 'dm');
+      updateUrlRoomParam(code);
+
+      document.getElementById('sync-status-text').innerText = "Hosting...";
+
+      try {
+        peerInstance = new Peer(peerId);
+
+        peerInstance.on('open', () => {
+          document.getElementById('sync-status-badge').className = "px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-600 flex items-center gap-1 shadow-sm";
+          document.getElementById('sync-status-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>Room: ${code} (DM)</span>`;
+          document.getElementById('sync-dm-controls').classList.add('hidden');
+          document.getElementById('btn-disconnect-room').classList.remove('hidden');
+        });
+
+        peerInstance.on('connection', (conn) => {
+          conn.on('open', () => {
+            dmClientConnections.push(conn);
+            document.getElementById('sync-status-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>Room: ${code} (${dmClientConnections.length} Connected)</span>`;
+            
+            // Send ALL existing group pins immediately to the player who just joined!
+            const groupPins = allPins.filter(p => p.scope === 'group');
+            conn.send({
+              type: 'initial-pins-sync',
+              pins: groupPins
+            });
+          });
+
+          conn.on('data', (data) => {
+            handleIncomingMapSync(data, conn);
+          });
+
+          conn.on('close', () => {
+            dmClientConnections = dmClientConnections.filter(c => c !== conn);
+            document.getElementById('sync-status-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>Room: ${code} (${dmClientConnections.length} Connected)</span>`;
+          });
+        });
+
+        peerInstance.on('error', (err) => {
+          console.error("Map peer error:", err);
+          if (err.type === 'unavailable-id') {
+            document.getElementById('sync-status-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>Room: ${code} (Host Active)</span>`;
+          } else {
+            disconnectRoom();
+          }
+        });
+      } catch (e) {
+        disconnectRoom();
+      }
+    }
+
+    // --- PLAYER CONNECTS TO ROOM ---
     function connectToRoom(manualCode) {
-      if (peerInstance) disconnectRoom();
+      if (peerInstance) disconnectRoom(true);
       const code = (manualCode || document.getElementById('map-room-input').value.trim()).toUpperCase();
       if (!code) {
         alert("Enter the 5-letter Room Code from your DM or companion app.");
@@ -743,73 +873,143 @@
       currentMapRoomCode = code;
       const targetPeerId = 'ttrpg-table-' + code.toLowerCase();
 
+      localStorage.setItem('ttrpg_active_room', code);
+      localStorage.setItem('ttrpg_user_role', 'player');
+      updateUrlRoomParam(code);
+
       document.getElementById('sync-status-text').innerText = "Connecting...";
 
       try {
         peerInstance = new Peer();
 
         peerInstance.on('open', () => {
-          peerRoomConn = peerInstance.connect(targetPeerId, { reliable: true });
+          clientConnectionToDm = peerInstance.connect(targetPeerId, { reliable: true });
 
-          peerRoomConn.on('open', () => {
+          clientConnectionToDm.on('open', () => {
             document.getElementById('sync-status-badge').className = "px-2 py-1 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-600 flex items-center gap-1 shadow-sm";
             document.getElementById('sync-status-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>Room: ${code}</span>`;
-            document.getElementById('room-input-container').classList.add('hidden');
+            document.getElementById('sync-player-controls').classList.add('hidden');
             document.getElementById('btn-disconnect-room').classList.remove('hidden');
 
-            peerRoomConn.send({
+            // Send handshake requesting current table state
+            clientConnectionToDm.send({
               type: 'map-handshake',
               user: getUserName()
             });
           });
 
-          peerRoomConn.on('data', (data) => {
+          clientConnectionToDm.on('data', (data) => {
             handleIncomingMapSync(data);
           });
 
-          peerRoomConn.on('close', () => {
-            disconnectRoom();
+          clientConnectionToDm.on('close', () => {
+            setTimeout(() => {
+              if (localStorage.getItem('ttrpg_active_room')) {
+                connectToRoom(localStorage.getItem('ttrpg_active_room'));
+              } else {
+                disconnectRoom();
+              }
+            }, 1200);
           });
         });
 
         peerInstance.on('error', (err) => {
           console.error("Map peer error:", err);
-          alert("Could not connect to room " + code + ". Make sure the DM has the companion room open!");
-          disconnectRoom();
+          setTimeout(() => {
+            if (localStorage.getItem('ttrpg_active_room')) {
+              connectToRoom(localStorage.getItem('ttrpg_active_room'));
+            } else {
+              disconnectRoom();
+            }
+          }, 2000);
         });
       } catch (e) {
-        alert("Peer error: " + e.message);
         disconnectRoom();
       }
     }
 
-    function disconnectRoom() {
+    function disconnectRoom(isSwitching) {
       if (peerInstance) {
         peerInstance.destroy();
         peerInstance = null;
       }
-      peerRoomConn = null;
+      clientConnectionToDm = null;
+      dmClientConnections = [];
       currentMapRoomCode = null;
+
+      if (!isSwitching) {
+        localStorage.removeItem('ttrpg_active_room');
+        removeUrlRoomParam();
+      }
 
       document.getElementById('sync-status-badge').className = "px-2 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1";
       document.getElementById('sync-status-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span><span>Offline</span>`;
-      document.getElementById('room-input-container').classList.remove('hidden');
+      changeMapUserRole();
       document.getElementById('btn-disconnect-room').classList.add('hidden');
     }
 
+    // Broadcast pin changes across the entire table
     function broadcastMapPin(pinData, action) {
-      if (!peerRoomConn || !peerRoomConn.open) return;
-      peerRoomConn.send({
+      const payload = {
         type: 'map-pin-sync',
         action: action,
         pin: pinData
-      });
+      };
+
+      if (mapPeerRole === 'dm') {
+        // DM broadcasts to ALL connected players
+        dmClientConnections.forEach(conn => {
+          if (conn && conn.open) conn.send(payload);
+        });
+      } else {
+        // Player sends to DM (DM will relay)
+        if (clientConnectionToDm && clientConnectionToDm.open) {
+          clientConnectionToDm.send(payload);
+        }
+      }
     }
 
-    function handleIncomingMapSync(data) {
+    function handleIncomingMapSync(data, senderConn) {
       if (!data) return;
 
+      // Initial bulk synchronization when player joins
+      if (data.type === 'initial-pins-sync') {
+        if (Array.isArray(data.pins)) {
+          data.pins.forEach(remotePin => {
+            const existingIdx = allPins.findIndex(p => p.id === remotePin.id);
+            if (existingIdx !== -1) {
+              allPins[existingIdx] = remotePin;
+            } else {
+              allPins.push(remotePin);
+            }
+          });
+          saveLocalPins();
+          renderAllPins();
+        }
+        return;
+      }
+
+      // Handshake from joining player to DM
+      if (data.type === 'map-handshake' && mapPeerRole === 'dm' && senderConn) {
+        const groupPins = allPins.filter(p => p.scope === 'group');
+        senderConn.send({
+          type: 'initial-pins-sync',
+          pins: groupPins
+        });
+        return;
+      }
+
       if (data.type === 'map-pin-sync') {
+        // If DM received a pin action from a player, relay it to all other players!
+        if (mapPeerRole === 'dm') {
+          dmClientConnections.forEach(conn => {
+            if (conn !== senderConn && conn.open) {
+              conn.send(data);
+            }
+          });
+        }
+
+        // Apply pin action locally
         if (data.action === 'create') {
           if (!allPins.some(p => p.id === data.pin.id)) {
             allPins.push(data.pin);
