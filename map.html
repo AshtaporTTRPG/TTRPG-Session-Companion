@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Durin Continent - Interactive Map</title>
+  <title>TTRPG Campaign Maps</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Fonts -->
@@ -47,17 +47,22 @@
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col bg-[#0c0e12]">
 
-  <!-- Top Header Navigation -->
-  <header class="border-b border-slate-800 bg-[#12151c]/95 z-30 px-4 py-2 flex items-center justify-between gap-3 shadow-md">
+  <!-- Top Header Navigation & Map Switcher -->
+  <header class="border-b border-slate-800 bg-[#12151c]/95 z-30 px-4 py-2 flex flex-wrap items-center justify-between gap-3 shadow-md">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-serif-title font-bold text-base shadow-inner">
+      <div id="header-map-icon" class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 font-serif-title font-bold text-base shadow-inner">
         🗺
       </div>
       <div>
-        <h1 class="text-base sm:text-lg font-bold font-serif-title text-slate-100 tracking-wider flex items-center gap-2">
-          Continent of Durin
-        </h1>
-        <p class="text-[10px] text-slate-400">Interactive Map & Journal Directory</p>
+        <div class="flex items-center gap-2">
+          <!-- Active Map Switcher Dropdown -->
+          <select id="map-select-dropdown" onchange="switchMap(this.value)" class="bg-slate-900 border border-slate-700 hover:border-amber-500/60 rounded-lg px-2.5 py-1 text-sm font-bold font-serif-title text-amber-300 focus:outline-none focus:border-amber-500 transition cursor-pointer">
+            <option value="durin">🗺️ Continent of Durin</option>
+            <option value="adrazzar">🏙️ Adrazzar Metropolis</option>
+          </select>
+          <span id="header-map-badge" class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">Continent</span>
+        </div>
+        <p id="header-map-subtitle" class="text-[10px] text-slate-400 mt-0.5">Interactive Map & Landmark Directory</p>
       </div>
     </div>
 
@@ -86,14 +91,15 @@
       <!-- Filter Pins -->
       <span class="text-slate-400 font-medium hidden md:inline">Show:</span>
       <select id="pin-filter-select" onchange="filterMapPins(this.value)" class="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
-        <option value="all">👁 All Pins</option>
+        <option value="all">👁 All Pins (Current Map)</option>
         <option value="group">📢 Group Table Pins</option>
         <option value="personal">🔒 Personal Notes Only</option>
-        <option value="Town">🏰 Towns & Cities</option>
+        <option value="Town">🏰 Towns / Districts</option>
         <option value="Dungeon">⚔️ Dungeons & Dangers</option>
         <option value="Quest">📜 Quests & Clues</option>
         <option value="NPC">👤 NPCs & Contacts</option>
-        <option value="Shop">💎 Shops & Resources</option>
+        <option value="Shop">💎 Shops & Taverns</option>
+        <option value="Note">📍 General Notes</option>
       </select>
     </div>
 
@@ -127,10 +133,10 @@
     <div id="pin-sidebar" class="absolute top-0 right-0 h-full w-full sm:w-96 bg-[#121620] border-l border-slate-800 z-30 shadow-2xl transition-transform duration-300 translate-x-full flex flex-col">
       <div class="p-4 border-b border-slate-800 flex items-center justify-between">
         <div>
-          <h2 class="text-sm font-bold font-serif-title text-slate-100 flex items-center gap-1.5">
-            <span>📜</span> Durin Exploration Journal
+          <h2 id="sidebar-map-heading" class="text-sm font-bold font-serif-title text-slate-100 flex items-center gap-1.5">
+            <span>📜</span> Exploration Journal
           </h2>
-          <p class="text-[11px] text-slate-400">Search and navigate marked locations</p>
+          <p id="sidebar-map-subheading" class="text-[11px] text-slate-400">Search and navigate marked locations</p>
         </div>
         <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-200 text-lg leading-none p-1">✕</button>
       </div>
@@ -157,26 +163,26 @@
           <h3 id="modal-title" class="text-sm font-bold text-slate-100 font-serif-title flex items-center gap-1.5">
             <span>📍</span> Place New Landmark Pin
           </h3>
-          <p class="text-[11px] text-slate-400">Add lore, NPC notes, or discovery clues</p>
+          <p id="modal-map-indicator" class="text-[11px] text-amber-400">Map: Continent of Durin</p>
         </div>
         <button onclick="closePinModal()" class="text-slate-500 hover:text-slate-300 text-base leading-none">✕</button>
       </div>
 
       <form onsubmit="event.preventDefault(); submitPinModal();" class="flex flex-col gap-3 text-xs">
         <div>
-          <label class="font-semibold text-slate-400 block mb-1">Landmark / Location Title</label>
-          <input type="text" id="pin-title-input" placeholder="e.g. Ironforge Bastion, Whispering Marsh..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500 font-medium" required>
+          <label class="font-semibold text-slate-400 block mb-1">Landmark / District / Location Title</label>
+          <input type="text" id="pin-title-input" placeholder="e.g. Ironforge Bastion, Whispering Marsh, Grand Bazaar..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 focus:outline-none focus:border-amber-500 font-medium" required>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="font-semibold text-slate-400 block mb-1">Pin Category</label>
             <select id="pin-category-select" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:border-amber-500">
-              <option value="Town">🏰 Town / Fortress</option>
+              <option value="Town">🏰 Town / District</option>
               <option value="Dungeon">⚔️ Dungeon / Danger</option>
               <option value="Quest">📜 Quest / Rumor</option>
-              <option value="NPC">👤 NPC / Ally</option>
-              <option value="Shop">💎 Shop / Loot</option>
+              <option value="NPC">👤 NPC / Contact</option>
+              <option value="Shop">💎 Shop / Tavern</option>
               <option value="Note">📍 Landmark / Note</option>
             </select>
           </div>
@@ -206,8 +212,27 @@
   </div>
 
   <script>
-    // --- MAP & PINS STATE ---
-    const MAP_IMAGE_SRC = 'durin-continent.webp';
+    // --- CAMPAIGN MAPS REGISTRY ---
+    const CAMPAIGN_MAPS = {
+      durin: {
+        id: 'durin',
+        name: 'Continent of Durin',
+        type: 'Continent',
+        icon: '🗺️',
+        file: 'durin-continent.webp',
+        subtitle: 'Continent Map & Regional Journal'
+      },
+      adrazzar: {
+        id: 'adrazzar',
+        name: 'Adrazzar Metropolis',
+        type: 'City',
+        icon: '🏙️',
+        file: 'adrazzar-city.webp',
+        subtitle: 'Metropolis City Map & District Journal'
+      }
+    };
+
+    let activeMapId = 'durin';
     let map = null;
     let imageOverlay = null;
     let isDropMode = false;
@@ -216,11 +241,11 @@
 
     // Pin Categories definition with custom colored icons
     const PIN_CATEGORIES = {
-      Town: { label: 'Town / City', icon: '🏰', color: '#f59e0b', border: '#b45309' },
+      Town: { label: 'Town / District', icon: '🏰', color: '#f59e0b', border: '#b45309' },
       Dungeon: { label: 'Dungeon / Danger', icon: '⚔️', color: '#ef4444', border: '#b91c1c' },
       Quest: { label: 'Quest / Rumor', icon: '📜', color: '#38bdf8', border: '#0284c7' },
-      NPC: { label: 'NPC / Ally', icon: '👤', color: '#a855f7', border: '#7e22ce' },
-      Shop: { label: 'Shop / Loot', icon: '💎', color: '#10b981', border: '#047857' },
+      NPC: { label: 'NPC / Contact', icon: '👤', color: '#a855f7', border: '#7e22ce' },
+      Shop: { label: 'Shop / Tavern', icon: '💎', color: '#10b981', border: '#047857' },
       Note: { label: 'Discovery Note', icon: '📍', color: '#e2e8f0', border: '#64748b' }
     };
 
@@ -228,58 +253,89 @@
     let leafletMarkers = {};
     let activeFilter = 'all';
 
-    // --- INITIALIZE LEAFLET WITH CRS.SIMPLE (FOR FANTASY 2D MAPS) ---
+    // --- INITIALIZE LEAFLET & LOAD MAP ---
     function initMap() {
-      // Create offscreen image to read actual dimensions of durin-continent.webp
+      // Check URL parameters for active map (?map=adrazzar or ?map=durin)
+      const urlParams = new URLSearchParams(window.location.search);
+      const requestedMap = urlParams.get('map');
+      if (requestedMap && CAMPAIGN_MAPS[requestedMap.toLowerCase()]) {
+        activeMapId = requestedMap.toLowerCase();
+      }
+
+      loadLocalPins();
+      setupMapViewer();
+      checkUrlForRoom();
+    }
+
+    function setupMapViewer() {
+      const activeMapConfig = CAMPAIGN_MAPS[activeMapId] || CAMPAIGN_MAPS.durin;
+
+      // Update header elements
+      document.getElementById('map-select-dropdown').value = activeMapId;
+      document.getElementById('header-map-badge').innerText = activeMapConfig.type;
+      document.getElementById('header-map-subtitle').innerText = activeMapConfig.subtitle;
+      document.getElementById('sidebar-map-heading').innerHTML = `<span>📜</span> ${activeMapConfig.name} Journal`;
+      document.getElementById('header-map-icon').innerText = activeMapConfig.type === 'City' ? '🏙️' : '🗺️';
+
+      // Load natural dimensions of the map image
       const img = new Image();
-      img.src = MAP_IMAGE_SRC;
+      img.src = activeMapConfig.file;
 
       img.onload = function() {
         const w = img.naturalWidth || 2048;
         const h = img.naturalHeight || 1536;
-
         const bounds = [[0, 0], [h, w]];
 
-        map = L.map('map-container', {
-          crs: L.CRS.Simple,
-          minZoom: -2,
-          maxZoom: 2,
-          zoomSnap: 0.25,
-          zoomDelta: 0.5,
-          attributionControl: false
-        });
+        if (!map) {
+          map = L.map('map-container', {
+            crs: L.CRS.Simple,
+            minZoom: -2,
+            maxZoom: 2,
+            zoomSnap: 0.25,
+            zoomDelta: 0.5,
+            attributionControl: false
+          });
+          map.on('click', onMapClick);
+        } else {
+          // Clear current overlay if switching
+          if (imageOverlay) map.removeLayer(imageOverlay);
+        }
 
-        imageOverlay = L.imageOverlay(MAP_IMAGE_SRC, bounds).addTo(map);
+        imageOverlay = L.imageOverlay(activeMapConfig.file, bounds).addTo(map);
         map.fitBounds(bounds);
         map.setMaxBounds(bounds);
 
-        // Click handler for placing pins
-        map.on('click', onMapClick);
-
-        loadLocalPins();
         renderAllPins();
-        checkUrlForRoom();
       };
 
       img.onerror = function() {
-        // Fallback placeholder notice if image not yet in repo
         document.getElementById('map-container').innerHTML = `
           <div class="h-full w-full flex flex-col items-center justify-center p-6 text-center text-slate-400">
-            <div class="text-4xl mb-3">🗺</div>
-            <h2 class="text-lg font-serif-title text-amber-400 font-bold mb-1">Durin Continent Map Loaded</h2>
-            <p class="text-xs text-slate-300 max-w-md">Looking for file: <code class="text-amber-300 font-mono-math">durin-continent.webp</code> in your GitHub repo.</p>
-            <p class="text-[11px] text-slate-500 mt-2">Make sure you uploaded <strong class="text-slate-400">durin-continent.webp</strong> directly into the same folder as <strong class="text-slate-400">map.html</strong>.</p>
+            <div class="text-4xl mb-3">⚠️</div>
+            <h2 class="text-lg font-serif-title text-amber-400 font-bold mb-1">${activeMapConfig.name} File Missing</h2>
+            <p class="text-xs text-slate-300 max-w-md">Looking for file: <code class="text-amber-300 font-mono-math">${activeMapConfig.file}</code> in your GitHub repo.</p>
+            <p class="text-[11px] text-slate-500 mt-2">Make sure you uploaded <strong class="text-slate-400">${activeMapConfig.file}</strong> directly into the same folder as <strong class="text-slate-400">map.html</strong>.</p>
           </div>
         `;
       };
     }
 
-    // --- PIN STORAGE & CREATION ---
+    function switchMap(newMapId) {
+      if (!CAMPAIGN_MAPS[newMapId]) return;
+      activeMapId = newMapId;
+      setupMapViewer();
+    }
+
+    // --- PIN STORAGE & CREATION (PIN ISOLATION PER MAP) ---
     function loadLocalPins() {
       try {
         const stored = localStorage.getItem('durin_map_pins');
         if (stored) {
           allPins = JSON.parse(stored);
+          // Migrate older pins that didn't have mapId
+          allPins.forEach(p => {
+            if (!p.mapId) p.mapId = 'durin';
+          });
         }
       } catch (e) {
         console.error("Could not load local pins", e);
@@ -298,7 +354,9 @@
 
     function updateHeaderCount() {
       const el = document.getElementById('header-pin-count');
-      if (el) el.innerText = allPins.length;
+      // Count pins specifically on the active map
+      const mapPins = allPins.filter(p => (p.mapId || 'durin') === activeMapId);
+      if (el) el.innerText = mapPins.length;
     }
 
     function togglePinDropMode() {
@@ -329,7 +387,9 @@
 
     function openCreatePinModal(coords) {
       editingPinId = null;
-      document.getElementById('modal-title').innerHTML = `<span>📍</span> Place New Landmark Pin`;
+      const activeMapConfig = CAMPAIGN_MAPS[activeMapId] || CAMPAIGN_MAPS.durin;
+      document.getElementById('modal-title').innerHTML = `<span>📍</span> Place Pin on ${activeMapConfig.name}`;
+      document.getElementById('modal-map-indicator').innerText = `Map: ${activeMapConfig.name} (${activeMapConfig.type})`;
       document.getElementById('pin-title-input').value = '';
       document.getElementById('pin-category-select').value = 'Town';
       document.getElementById('pin-scope-select').value = peerInstance ? 'group' : 'personal';
@@ -346,8 +406,10 @@
 
       editingPinId = id;
       pendingCoords = [pin.lat, pin.lng];
+      const activeMapConfig = CAMPAIGN_MAPS[pin.mapId || activeMapId] || CAMPAIGN_MAPS.durin;
 
       document.getElementById('modal-title').innerHTML = `<span>✏️</span> Edit Landmark Pin`;
+      document.getElementById('modal-map-indicator').innerText = `Map: ${activeMapConfig.name}`;
       document.getElementById('pin-title-input').value = pin.title;
       document.getElementById('pin-category-select').value = pin.category;
       document.getElementById('pin-scope-select').value = pin.scope;
@@ -391,9 +453,10 @@
           if (scope === 'group') broadcastMapPin(p, 'update');
         }
       } else {
-        // Create new
+        // Create new pin locked to activeMapId
         const newPin = {
           id: 'pin-' + Date.now() + Math.random().toString(36).substr(2, 4),
+          mapId: activeMapId,
           lat: pendingCoords[0],
           lng: pendingCoords[1],
           title,
@@ -417,7 +480,7 @@
       if (confirm('Delete this pin from the map?')) {
         const pin = allPins.find(p => p.id === id);
         if (pin && pin.scope === 'group') {
-          broadcastMapPin({ id }, 'delete');
+          broadcastMapPin({ id, mapId: pin.mapId || activeMapId }, 'delete');
         }
         allPins = allPins.filter(p => p.id !== id);
         saveLocalPins();
@@ -445,12 +508,17 @@
     }
 
     function renderAllPins() {
-      // Clear existing Leaflet markers
+      if (!map) return;
+
+      // Clear existing markers
       Object.values(leafletMarkers).forEach(m => map.removeLayer(m));
       leafletMarkers = {};
 
-      allPins.forEach(pin => {
-        // Apply active filter
+      // Filter pins strictly belonging to activeMapId
+      const currentMapPins = allPins.filter(p => (p.mapId || 'durin') === activeMapId);
+
+      currentMapPins.forEach(pin => {
+        // Apply active category / scope filter
         if (activeFilter === 'group' && pin.scope !== 'group') return;
         if (activeFilter === 'personal' && pin.scope !== 'personal') return;
         if (activeFilter !== 'all' && activeFilter !== 'group' && activeFilter !== 'personal') {
@@ -513,13 +581,16 @@
 
       const query = (document.getElementById('sidebar-search-input')?.value || '').toLowerCase();
 
-      const filtered = allPins.filter(p => {
+      // Only search pins belonging to the active map
+      const currentMapPins = allPins.filter(p => (p.mapId || 'durin') === activeMapId);
+
+      const filtered = currentMapPins.filter(p => {
         const matchesQuery = p.title.toLowerCase().includes(query) || (p.notes && p.notes.toLowerCase().includes(query));
         return matchesQuery;
       });
 
       if (filtered.length === 0) {
-        container.innerHTML = '<div class="text-slate-500 italic text-center py-10 text-xs">No pins found. Drop one on the map!</div>';
+        container.innerHTML = '<div class="text-slate-500 italic text-center py-10 text-xs">No pins found on this map. Click Drop Pin to add one!</div>';
         return;
       }
 
@@ -562,7 +633,7 @@
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allPins, null, 2));
       const downloadAnchor = document.createElement('a');
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", "durin_continent_pins_backup.json");
+      downloadAnchor.setAttribute("download", `campaign_maps_pins_backup.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -571,7 +642,6 @@
     // --- PEERJS MULTIPLAYER SYNC (SHARED WITH COMPANION) ---
     let peerInstance = null;
     let peerRoomConn = null;
-    let hostConnections = [];
     let currentMapRoomCode = null;
 
     function getUserName() {
@@ -584,7 +654,6 @@
     }
 
     function checkUrlForRoom() {
-      // Restore user name
       const saved = localStorage.getItem('ttrpg_user_name');
       if (saved) document.getElementById('sync-user-name').value = saved;
 
@@ -621,7 +690,6 @@
             document.getElementById('room-input-container').classList.add('hidden');
             document.getElementById('btn-disconnect-room').classList.remove('hidden');
 
-            // Send handshake requesting existing group pins
             peerRoomConn.send({
               type: 'map-handshake',
               user: getUserName()
