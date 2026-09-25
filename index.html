@@ -152,109 +152,188 @@
 
       </div>
     </section>
-<!-- 2. DAMAGE TALLY TAB -->
+<!-- 2. DAMAGE TALLY & ROLL TAB -->
     <section id="tab-content-tally" class="tab-panel hidden flex flex-col gap-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Left: Running Counter & Controls -->
-        <div class="lg:col-span-2 bg-[#161a23] p-5 rounded-xl border border-slate-800 flex flex-col gap-5 shadow-lg">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Two Separate Modules (lg:col-span-8) -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+          
+          <!-- MODULE 1: D20 ATTACK, SKILL & SAVE ROLLER (Independent from Damage) -->
+          <div class="bg-[#161a23] p-5 rounded-xl border border-indigo-900/40 shadow-lg flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-700 font-bold uppercase">d20 System</span>
+                  <h2 class="text-base sm:text-lg font-bold text-slate-100 font-serif-title">Attack, Skill & Saving Throw Roller</h2>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Standalone resolution rolls — <span class="text-indigo-300 font-medium">never added to Damage HP Drain</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-500 uppercase tracking-wider block">Roll Total</span>
+                <span id="d20-latest-result" class="text-3xl sm:text-4xl font-extrabold font-mono-math text-indigo-400">--</span>
+              </div>
+            </div>
+
+            <!-- Controls: Roll Types & Modifiers -->
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+              <!-- Roll Type -->
+              <div class="sm:col-span-4">
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Check Type</label>
+                <select id="d20-check-type" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-medium">
+                  <option value="Attack Roll">⚔️ Attack Roll</option>
+                  <option value="Skill Check">🎯 Skill Check</option>
+                  <option value="Saving Throw">🛡 Saving Throw</option>
+                  <option value="Straight d20">🎲 Straight d20</option>
+                </select>
+              </div>
+
+              <!-- Modifier Input -->
+              <div class="sm:col-span-3">
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Modifier (+ / -)</label>
+                <input type="number" id="d20-mod-input" value="5" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-center font-mono-math text-indigo-300 font-bold focus:outline-none focus:border-indigo-500">
+              </div>
+
+              <!-- Optional Extra Die (Bless / Guidance / Bardic) -->
+              <div class="sm:col-span-3">
+                <label class="block text-xs font-semibold text-slate-400 mb-1">Bonus Die</label>
+                <select id="d20-bonus-die" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500">
+                  <option value="0">None</option>
+                  <option value="4">+1d4 (Bless / Guidance)</option>
+                  <option value="6">+1d6 (Bardic / Inspiration)</option>
+                  <option value="8">+1d8 (Bardic Insp.)</option>
+                  <option value="10">+1d10 (Bardic Insp.)</option>
+                  <option value="12">+1d12 (Superiority / Insp.)</option>
+                </select>
+              </div>
+
+              <!-- Roll Action Button -->
+              <div class="sm:col-span-2">
+                <button onclick="rollD20Check()" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-slate-100 font-bold text-xs rounded-lg transition shadow-md flex items-center justify-center gap-1.5">
+                  <span>🎲</span> Roll
+                </button>
+              </div>
+            </div>
+
+            <!-- Breakdown callout bar -->
+            <div id="d20-breakdown-bar" class="p-2.5 bg-slate-900/80 rounded-lg border border-slate-800 flex items-center justify-between text-xs font-mono-math">
+              <span id="d20-breakdown-text" class="text-slate-400">Ready to roll d20...</span>
+              <span id="d20-crit-badge" class="hidden text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider"></span>
+            </div>
+          </div>
+
+          <!-- MODULE 2: CUMULATIVE DAMAGE TALLY (Directly feeds Combatant HP Drain) -->
+          <div class="bg-[#161a23] p-5 rounded-xl border border-amber-900/30 shadow-lg flex flex-col gap-5">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-700 font-bold uppercase">Damage Pool</span>
+                  <h2 class="text-base sm:text-lg font-bold text-slate-100 font-serif-title">Cumulative Damage Tally</h2>
+                </div>
+                <p class="text-xs text-slate-400 mt-0.5">Roll & accumulate damage — applies to combatant HP via <span class="text-amber-400 font-medium">💥 Drain Damage</span></p>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] text-slate-500 uppercase tracking-wider block">Damage Total</span>
+                <span id="tally-total" class="text-4xl font-extrabold font-mono-math text-amber-400">0</span>
+              </div>
+            </div>
+
+            <!-- Damage Dice Buttons -->
             <div>
-              <h2 class="text-lg font-bold text-slate-100 font-serif-title">Running Damage & Roll Tally</h2>
-              <p class="text-xs text-slate-400">Sum attacks, spell dice, or multiple hits in real time</p>
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Roll Damage Dice & Add to Pool</label>
+              <div class="grid grid-cols-6 gap-2">
+                <button onclick="rollDamageDie(4)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
+                  <span>d4</span>
+                </button>
+                <button onclick="rollDamageDie(6)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
+                  <span>d6</span>
+                </button>
+                <button onclick="rollDamageDie(8)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
+                  <span>d8</span>
+                </button>
+                <button onclick="rollDamageDie(10)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
+                  <span>d10</span>
+                </button>
+                <button onclick="rollDamageDie(12)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
+                  <span>d12</span>
+                </button>
+                <button onclick="rollDamageDie(20)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center" title="Exotic d20 damage die">
+                  <span>d20 dmg</span>
+                </button>
+              </div>
             </div>
-            <div class="text-right">
-              <span class="text-xs text-slate-500 uppercase tracking-wider block">Current Total</span>
-              <span id="tally-total" class="text-4xl font-extrabold font-mono-math text-amber-400">0</span>
+
+            <!-- Rapid Increment Buttons (+1 to +20 in two lines) -->
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Flat Damage Modifiers (+1 to +20)</label>
+              <!-- Line 1: +1 to +10 -->
+              <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+                <button onclick="addToTally(1, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+1</button>
+                <button onclick="addToTally(2, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+2</button>
+                <button onclick="addToTally(3, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+3</button>
+                <button onclick="addToTally(4, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+4</button>
+                <button onclick="addToTally(5, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+5</button>
+                <button onclick="addToTally(6, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+6</button>
+                <button onclick="addToTally(7, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+7</button>
+                <button onclick="addToTally(8, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+8</button>
+                <button onclick="addToTally(9, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+9</button>
+                <button onclick="addToTally(10, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+10</button>
+              </div>
+              <!-- Line 2: +11 to +20 -->
+              <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+                <button onclick="addToTally(11, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+11</button>
+                <button onclick="addToTally(12, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+12</button>
+                <button onclick="addToTally(13, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+13</button>
+                <button onclick="addToTally(14, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+14</button>
+                <button onclick="addToTally(15, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+15</button>
+                <button onclick="addToTally(16, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+16</button>
+                <button onclick="addToTally(17, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+17</button>
+                <button onclick="addToTally(18, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+18</button>
+                <button onclick="addToTally(19, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+19</button>
+                <button onclick="addToTally(20, 'Damage Mod')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+20</button>
+              </div>
+            </div>
+
+            <!-- Custom Input & Modifier Actions -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <form onsubmit="event.preventDefault(); addCustomTally();" class="flex gap-1.5">
+                <input type="number" id="custom-tally-input" placeholder="Custom..." class="w-full bg-slate-900/90 border border-slate-700 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:border-amber-500 font-mono-math">
+                <button type="submit" class="bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">Add</button>
+                <button type="button" onclick="subtractCustomTally()" class="bg-slate-800 hover:bg-rose-600 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Sub</button>
+              </form>
+              <div class="flex gap-2">
+                <button onclick="applyHalfTally()" class="flex-1 bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-800/50 text-cyan-300 py-1.5 rounded-lg text-xs font-bold transition">
+                  ½ Resistance
+                </button>
+                <button onclick="applyDoubleTally()" class="flex-1 bg-purple-950/50 hover:bg-purple-900/60 border border-purple-800/50 text-purple-300 py-1.5 rounded-lg text-xs font-bold transition">
+                  2× Crit / Vuln
+                </button>
+                <button onclick="resetDamagePool()" class="bg-amber-950/60 hover:bg-amber-900/80 border border-amber-800/50 text-amber-300 px-3 py-1.5 rounded-lg text-xs font-bold transition" title="Reset current damage pool to 0 (preserves history)">
+                  Reset Pool
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Dice Buttons -->
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Click to Roll Die & Add</label>
-            <div class="grid grid-cols-6 gap-2">
-              <button onclick="rollDie(4)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
-                <span>d4</span>
-              </button>
-              <button onclick="rollDie(6)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
-                <span>d6</span>
-              </button>
-              <button onclick="rollDie(8)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
-                <span>d8</span>
-              </button>
-              <button onclick="rollDie(10)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
-                <span>d10</span>
-              </button>
-              <button onclick="rollDie(12)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
-                <span>d12</span>
-              </button>
-              <button onclick="rollDie(20)" class="py-2.5 bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 rounded-lg text-sm font-bold transition flex flex-col items-center">
-                <span>d20</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Rapid Increment Buttons (+1 to +20 in two lines) -->
-          <div class="flex flex-col gap-2">
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Quick Flat Modifiers (+1 to +20)</label>
-            <!-- Line 1: +1 to +10 -->
-            <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
-              <button onclick="addToTally(1, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+1</button>
-              <button onclick="addToTally(2, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+2</button>
-              <button onclick="addToTally(3, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+3</button>
-              <button onclick="addToTally(4, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+4</button>
-              <button onclick="addToTally(5, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+5</button>
-              <button onclick="addToTally(6, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+6</button>
-              <button onclick="addToTally(7, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+7</button>
-              <button onclick="addToTally(8, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+8</button>
-              <button onclick="addToTally(9, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+9</button>
-              <button onclick="addToTally(10, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+10</button>
-            </div>
-            <!-- Line 2: +11 to +20 -->
-            <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
-              <button onclick="addToTally(11, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+11</button>
-              <button onclick="addToTally(12, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+12</button>
-              <button onclick="addToTally(13, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+13</button>
-              <button onclick="addToTally(14, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+14</button>
-              <button onclick="addToTally(15, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+15</button>
-              <button onclick="addToTally(16, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+16</button>
-              <button onclick="addToTally(17, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+17</button>
-              <button onclick="addToTally(18, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+18</button>
-              <button onclick="addToTally(19, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+19</button>
-              <button onclick="addToTally(20, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+20</button>
-            </div>
-          </div>
-
-          <!-- Custom Input & Modifier Actions -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <form onsubmit="event.preventDefault(); addCustomTally();" class="flex gap-1.5">
-              <input type="number" id="custom-tally-input" placeholder="Custom..." class="w-full bg-slate-900/90 border border-slate-700 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:border-amber-500 font-mono-math">
-              <button type="submit" class="bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">Add</button>
-              <button type="button" onclick="subtractCustomTally()" class="bg-slate-800 hover:bg-rose-600 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Sub</button>
-            </form>
-            <div class="flex gap-2">
-              <button onclick="applyHalfTally()" class="flex-1 bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-800/50 text-cyan-300 py-1.5 rounded-lg text-xs font-bold transition">
-                ½ Resistance
-              </button>
-              <button onclick="applyDoubleTally()" class="flex-1 bg-purple-950/50 hover:bg-purple-900/60 border border-purple-800/50 text-purple-300 py-1.5 rounded-lg text-xs font-bold transition">
-                2× Crit / Vuln
-              </button>
-              <button onclick="clearTally()" class="bg-rose-950/50 hover:bg-rose-900/60 border border-rose-800/50 text-rose-300 px-3 py-1.5 rounded-lg text-xs font-bold transition">
-                Reset
-              </button>
-            </div>
-          </div>
         </div>
 
-        <!-- Right: Tally Audit Log -->
-        <div class="bg-[#161a23] p-5 rounded-xl border border-slate-800 flex flex-col gap-3 shadow-lg">
+        <!-- Right: Persistent Roll & Tally Audit Log (lg:col-span-4) -->
+        <div class="lg:col-span-4 bg-[#161a23] p-5 rounded-xl border border-slate-800 flex flex-col gap-3 shadow-lg">
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-            <h3 class="text-xs uppercase font-bold tracking-wider text-slate-400">Tally History & Audit</h3>
-            <button onclick="undoLastTally()" class="text-xs text-amber-400 hover:underline">Undo (Ctrl+Z)</button>
+            <div>
+              <h3 class="text-xs uppercase font-bold tracking-wider text-slate-400">Roll & Tally History</h3>
+              <span class="text-[10px] text-slate-500">Persists across pool resets</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="undoLastTally()" class="text-xs text-amber-400 hover:underline" title="Undo last damage addition (Ctrl+Z)">Undo</button>
+              <button onclick="clearAuditHistory()" class="text-xs text-rose-400 hover:bg-rose-950/40 px-2 py-0.5 rounded border border-rose-900/40 transition" title="Wipe entire history log">Clear Log</button>
+            </div>
           </div>
-          <div id="tally-history-list" class="flex-1 max-h-72 overflow-y-auto custom-scrollbar flex flex-col gap-1.5 pr-1 text-xs font-mono-math">
-            <div class="text-slate-500 italic text-center py-6">No rolls or values added yet.</div>
+          <div id="tally-history-list" class="flex-1 max-h-[580px] overflow-y-auto custom-scrollbar flex flex-col gap-1.5 pr-1 text-xs font-mono-math">
+            <div class="text-slate-500 italic text-center py-6">No rolls or values logged yet.</div>
           </div>
         </div>
+
       </div>
     </section>
 
@@ -686,7 +765,18 @@
 
     function drainTallyToCombatant(id) {
       if (tallyTotal === 0) return;
-      adjustHp(id, -tallyTotal);
+      const c = combatants.find(x => x.id === id);
+      const amount = tallyTotal;
+      adjustHp(id, -amount);
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      tallyHistory.push({
+        type: 'drain',
+        desc: `Applied ${amount} damage to ${c ? c.name : 'Combatant'}`,
+        time: timeStr
+      });
+      tallyTotal = 0;
+      updateTallyUI();
     }
 
     function updateCombatantName(id, val) {
@@ -767,39 +857,145 @@
       renderCombatants();
     }
 
-    // --- DAMAGE & ROLL TALLY ---
+    // --- D20 SYSTEM ROLLER (ATTACK, SKILL, SAVE) ---
+    function rollD20Check() {
+      const checkType = document.getElementById('d20-check-type').value;
+      const mod = parseInt(document.getElementById('d20-mod-input').value) || 0;
+      const bonusSides = parseInt(document.getElementById('d20-bonus-die').value) || 0;
+
+      const d20 = Math.floor(Math.random() * 20) + 1;
+      let bonusRoll = 0;
+      if (bonusSides > 0) {
+        bonusRoll = Math.floor(Math.random() * bonusSides) + 1;
+      }
+      const total = d20 + mod + bonusRoll;
+
+      document.getElementById('d20-latest-result').innerText = total;
+
+      const badge = document.getElementById('d20-crit-badge');
+      if (d20 === 20) {
+        badge.className = "text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-emerald-950 text-emerald-300 border border-emerald-500 inline-block";
+        badge.innerText = "NAT 20!";
+      } else if (d20 === 1) {
+        badge.className = "text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider bg-rose-950 text-rose-300 border border-rose-500 inline-block";
+        badge.innerText = "NAT 1!";
+      } else {
+        badge.className = "hidden";
+      }
+
+      let breakdown = `d20: ${d20} ${mod >= 0 ? '+ ' + mod : '- ' + Math.abs(mod)}`;
+      if (bonusSides > 0) breakdown += ` + 1d${bonusSides} (${bonusRoll})`;
+      breakdown += ` = ${total}`;
+      document.getElementById('d20-breakdown-text').innerText = `${checkType}: ${breakdown}`;
+
+      // Log to audit history (standalone - NEVER added to damage tally)
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      tallyHistory.push({
+        type: 'check',
+        title: checkType,
+        desc: breakdown,
+        val: total,
+        isCrit: d20 === 20,
+        isFumble: d20 === 1,
+        time: timeStr
+      });
+      updateTallyUI();
+    }
+
+    // --- CUMULATIVE DAMAGE TALLY ---
     function updateTallyUI() {
       document.getElementById('tally-total').innerText = tallyTotal;
       const list = document.getElementById('tally-history-list');
       if (tallyHistory.length === 0) {
-        list.innerHTML = '<div class="text-slate-500 italic text-center py-6">No rolls or values added yet.</div>';
+        list.innerHTML = '<div class="text-slate-500 italic text-center py-8">No rolls or values logged yet.</div>';
         return;
       }
-      list.innerHTML = tallyHistory.slice().reverse().map((item, idx) => `
-        <div class="flex items-center justify-between p-2 bg-slate-900/60 rounded border border-slate-800">
-          <span class="text-slate-400">${item.desc}</span>
-          <span class="font-bold text-amber-400">+${item.val}</span>
-        </div>
-      `).join('');
-      renderCombatants(); // update tally count displayed on combatant cards
+
+      list.innerHTML = tallyHistory.slice().reverse().map((item) => {
+        if (item.type === 'check') {
+          return `
+            <div class="flex items-start justify-between p-2.5 bg-indigo-950/20 rounded-lg border border-indigo-900/40">
+              <div>
+                <div class="flex items-center gap-1.5 mb-0.5">
+                  <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-indigo-950 text-indigo-300 border border-indigo-700">d20 Check</span>
+                  <span class="text-xs font-semibold text-slate-200">${item.title}</span>
+                  ${item.isCrit ? '<span class="text-[9px] px-1 bg-emerald-950 text-emerald-300 border border-emerald-600 rounded font-bold">NAT 20</span>' : ''}
+                  ${item.isFumble ? '<span class="text-[9px] px-1 bg-rose-950 text-rose-300 border border-rose-600 rounded font-bold">NAT 1</span>' : ''}
+                </div>
+                <div class="text-[11px] text-slate-400 font-mono-math">${item.desc}</div>
+              </div>
+              <div class="text-right">
+                <span class="font-extrabold text-base font-mono-math text-indigo-300">${item.val}</span>
+                <span class="text-[9px] text-slate-500 block">${item.time}</span>
+              </div>
+            </div>
+          `;
+        } else if (item.type === 'drain') {
+          return `
+            <div class="flex items-center justify-between p-2 bg-emerald-950/20 rounded-lg border border-emerald-800/40">
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-emerald-950 text-emerald-300 border border-emerald-700">HP Drain</span>
+                  <span class="text-xs text-emerald-200 font-medium">${item.desc}</span>
+                </div>
+              </div>
+              <span class="text-[9px] text-slate-500">${item.time}</span>
+            </div>
+          `;
+        } else if (item.type === 'reset') {
+          return `
+            <div class="flex items-center justify-between p-2 bg-slate-900/80 rounded-lg border border-slate-800">
+              <span class="text-[10px] text-slate-400 italic">⚡ ${item.desc}</span>
+              <span class="text-[9px] text-slate-500">${item.time}</span>
+            </div>
+          `;
+        } else {
+          return `
+            <div class="flex items-center justify-between p-2.5 bg-slate-900/60 rounded-lg border border-slate-800">
+              <div>
+                <div class="flex items-center gap-1.5 mb-0.5">
+                  <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase bg-amber-950 text-amber-300 border border-amber-800">Damage</span>
+                  <span class="text-xs text-slate-300">${item.desc}</span>
+                </div>
+                <span class="text-[10px] text-slate-500 font-mono-math">Pool: ${item.runningTotal}</span>
+              </div>
+              <div class="text-right">
+                <span class="font-bold text-sm font-mono-math ${item.val >= 0 ? 'text-amber-400' : 'text-rose-400'}">${item.val >= 0 ? '+' + item.val : item.val}</span>
+                <span class="text-[9px] text-slate-500 block">${item.time}</span>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+
+      renderCombatants();
     }
 
     function addToTally(val, desc) {
       tallyTotal += val;
-      tallyHistory.push({ val, desc: desc || `+${val}` });
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      tallyHistory.push({
+        type: 'damage',
+        desc: desc || `+${val}`,
+        val: val,
+        runningTotal: tallyTotal,
+        time: timeStr
+      });
       updateTallyUI();
     }
 
-    function rollDie(sides) {
+    function rollDamageDie(sides) {
       const roll = Math.floor(Math.random() * sides) + 1;
-      addToTally(roll, `d${sides} Roll`);
+      addToTally(roll, `d${sides} Damage Die`);
     }
 
     function addCustomTally() {
       const inp = document.getElementById('custom-tally-input');
       const val = parseInt(inp.value);
       if (!isNaN(val) && val !== 0) {
-        addToTally(val, `Custom (+${val})`);
+        addToTally(val, `Custom Flat Damage (+${val})`);
         inp.value = '';
       }
     }
@@ -808,36 +1004,77 @@
       const inp = document.getElementById('custom-tally-input');
       const val = parseInt(inp.value);
       if (!isNaN(val) && val !== 0) {
-        addToTally(-Math.abs(val), `Custom (-${Math.abs(val)})`);
+        addToTally(-Math.abs(val), `Custom Damage Subtraction (-${Math.abs(val)})`);
         inp.value = '';
       }
     }
 
     function applyHalfTally() {
       const half = Math.floor(tallyTotal / 2);
-      tallyHistory.push({ val: -(tallyTotal - half), desc: `Halved (Resistance)` });
+      const diff = tallyTotal - half;
       tallyTotal = half;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      tallyHistory.push({
+        type: 'damage',
+        desc: `Halved (Resistance)`,
+        val: -diff,
+        runningTotal: tallyTotal,
+        time: timeStr
+      });
       updateTallyUI();
     }
 
     function applyDoubleTally() {
-      const doubled = tallyTotal;
+      const added = tallyTotal;
       tallyTotal = tallyTotal * 2;
-      tallyHistory.push({ val: doubled, desc: `Doubled (Crit/Vuln)` });
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      tallyHistory.push({
+        type: 'damage',
+        desc: `Doubled (Crit/Vuln)`,
+        val: added,
+        runningTotal: tallyTotal,
+        time: timeStr
+      });
       updateTallyUI();
     }
 
     function undoLastTally() {
       if (tallyHistory.length === 0) return;
-      const last = tallyHistory.pop();
-      tallyTotal -= last.val;
+      // Find the last damage entry to undo from running tally
+      const lastDamageIndex = tallyHistory.slice().reverse().findIndex(item => item.type === 'damage');
+      if (lastDamageIndex !== -1) {
+        const actualIndex = tallyHistory.length - 1 - lastDamageIndex;
+        const removed = tallyHistory.splice(actualIndex, 1)[0];
+        tallyTotal -= removed.val;
+        updateTallyUI();
+      } else {
+        // Otherwise pop the last entry
+        tallyHistory.pop();
+        updateTallyUI();
+      }
+    }
+
+    function resetDamagePool() {
+      if (tallyTotal === 0) return;
+      const prev = tallyTotal;
+      tallyTotal = 0;
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      tallyHistory.push({
+        type: 'reset',
+        desc: `Damage pool cleared (was ${prev})`,
+        time: timeStr
+      });
       updateTallyUI();
     }
 
-    function clearTally() {
-      tallyTotal = 0;
-      tallyHistory = [];
-      updateTallyUI();
+    function clearAuditHistory() {
+      if (confirm('Clear the entire roll and damage history log?')) {
+        tallyHistory = [];
+        updateTallyUI();
+      }
     }
 
     window.addEventListener('keydown', (e) => {
