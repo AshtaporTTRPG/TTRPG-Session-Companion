@@ -66,39 +66,93 @@
 
     <!-- 1. COMBAT TRACKER TAB -->
     <section id="tab-content-combat" class="tab-panel flex flex-col gap-6">
-      <div class="flex flex-wrap items-center justify-between gap-3 bg-[#161a23] p-4 rounded-xl border border-slate-800 shadow-lg">
-        <div class="flex flex-wrap items-center gap-2">
-          <button onclick="addCombatantPrompt()" class="bg-amber-600 hover:bg-amber-500 text-slate-900 font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5">
-            <span>+</span> Custom Combatant
-          </button>
-          <div class="h-6 w-[1px] bg-slate-700 hidden sm:block mx-1"></div>
-          <span class="text-xs text-slate-400 font-medium hidden sm:inline">Random Archetypes:</span>
-          <button onclick="addPreset('pc')" class="bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 border border-blue-700/50 text-xs px-2.5 py-2 rounded-lg transition-all">
-            🎲 + PC
-          </button>
-          <button onclick="addPreset('mob')" class="bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-700/50 text-xs px-2.5 py-2 rounded-lg transition-all">
-            🎲 + Mob
-          </button>
-          <button onclick="addPreset('boss')" class="bg-rose-900/40 hover:bg-rose-800/60 text-rose-300 border border-rose-700/50 text-xs px-2.5 py-2 rounded-lg transition-all">
-            🎲 + Boss
-          </button>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left: Combatant Cards (lg:col-span-8) -->
+        <div class="lg:col-span-8 flex flex-col gap-4">
+          <div class="flex flex-wrap items-center justify-between gap-3 bg-[#161a23] p-4 rounded-xl border border-slate-800 shadow-lg">
+            <div class="flex flex-wrap items-center gap-2">
+              <button onclick="addCombatantPrompt()" class="bg-amber-600 hover:bg-amber-500 text-slate-900 font-semibold text-xs sm:text-sm px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5">
+                <span>+</span> Custom Combatant
+              </button>
+              <div class="h-6 w-[1px] bg-slate-700 hidden sm:block mx-1"></div>
+              <span class="text-xs text-slate-400 font-medium hidden sm:inline">Random Archetypes:</span>
+              <button onclick="addPreset('pc')" class="bg-blue-900/40 hover:bg-blue-800/60 text-blue-300 border border-blue-700/50 text-xs px-2.5 py-2 rounded-lg transition-all">
+                🎲 + PC
+              </button>
+              <button onclick="addPreset('mob')" class="bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-300 border border-emerald-700/50 text-xs px-2.5 py-2 rounded-lg transition-all">
+                🎲 + Mob
+              </button>
+              <button onclick="addPreset('boss')" class="bg-rose-900/40 hover:bg-rose-800/60 text-rose-300 border border-rose-700/50 text-xs px-2.5 py-2 rounded-lg transition-all">
+                🎲 + Boss
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-slate-400">Sort:</span>
+              <button onclick="sortCombatants('hp')" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded border border-slate-700 text-slate-300">HP %</button>
+              <button onclick="sortCombatants('name')" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded border border-slate-700 text-slate-300">Name</button>
+              <button onclick="clearAllCombatants()" class="text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 px-2 py-1.5 rounded transition">Clear All</button>
+            </div>
+          </div>
+
+          <!-- Combatant Cards Grid -->
+          <div id="combatants-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Rendered via JS -->
+          </div>
         </div>
 
-        <div class="flex items-center gap-2 text-xs">
-          <span class="text-slate-400">Sort:</span>
-          <button onclick="sortCombatants('hp')" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded border border-slate-700 text-slate-300">HP %</button>
-          <button onclick="sortCombatants('name')" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded border border-slate-700 text-slate-300">Name</button>
-          <button onclick="clearAllCombatants()" class="text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 px-2 py-1.5 rounded transition">Clear All</button>
-        </div>
-      </div>
+        <!-- Right: Simple Initiative Order & Round Tracker (lg:col-span-4) -->
+        <div class="lg:col-span-4 bg-[#161a23] p-5 rounded-xl border border-slate-800 flex flex-col gap-4 shadow-lg sticky top-20">
+          
+          <!-- Round Counter Header -->
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Combat Round</span>
+              <div class="flex items-center gap-2">
+                <span id="round-counter-display" class="text-3xl font-extrabold font-mono-math text-amber-400">Round 1</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="adjustRound(-1)" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-sm font-bold text-slate-300 transition" title="Previous Round">-1</button>
+              <button onclick="adjustRound(1)" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow" title="Next Round">
+                Next Round ▶
+              </button>
+              <button onclick="resetRound()" class="w-8 h-8 bg-slate-800 hover:bg-rose-900/60 border border-slate-700 hover:border-rose-700 rounded-lg text-xs text-slate-400 hover:text-rose-300 transition" title="Reset Round to 1">↺</button>
+            </div>
+          </div>
 
-      <!-- Combatant Cards Grid -->
-      <div id="combatants-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <!-- Rendered via JS -->
+          <!-- Quick Add to Initiative Form -->
+          <form onsubmit="event.preventDefault(); addInitiativeFromForm();" class="flex flex-col gap-2">
+            <span class="text-xs font-semibold text-slate-400">Initiative Order</span>
+            <div class="flex gap-2">
+              <input type="text" id="init-name-input" placeholder="Combatant name..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 font-medium">
+              <input type="number" id="init-score-input" placeholder="Init" class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-center font-mono-math text-amber-400 focus:outline-none focus:border-amber-500 font-bold">
+              <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-slate-900 font-bold text-xs px-3 py-1.5 rounded-lg transition">
+                + Add
+              </button>
+            </div>
+          </form>
+
+          <!-- Initiative Order Controls -->
+          <div class="flex items-center justify-between gap-1.5 pt-1 border-t border-slate-800/80">
+            <button onclick="sortInitiative()" class="text-xs px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg transition font-semibold flex items-center gap-1.5">
+              ⬇ Sort High to Low
+            </button>
+            <button onclick="clearInitiativeOrder()" class="text-xs px-2.5 py-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/30 border border-transparent hover:border-rose-900/50 rounded-lg transition">
+              Clear All
+            </button>
+          </div>
+
+          <!-- Initiative List Container -->
+          <div id="initiative-list-container" class="flex flex-col gap-2 max-h-[460px] overflow-y-auto custom-scrollbar pr-1">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
       </div>
     </section>
-
-    <!-- 2. DAMAGE TALLY TAB -->
+<!-- 2. DAMAGE TALLY TAB -->
     <section id="tab-content-tally" class="tab-panel hidden flex flex-col gap-6">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left: Running Counter & Controls -->
@@ -139,26 +193,43 @@
             </div>
           </div>
 
-          <!-- Rapid Increment Buttons -->
-          <div>
-            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Quick Flat Modifiers</label>
-            <div class="flex flex-wrap gap-1.5">
-              <button onclick="addToTally(1, 'flat')" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700">+1</button>
-              <button onclick="addToTally(2, 'flat')" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700">+2</button>
-              <button onclick="addToTally(3, 'flat')" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700">+3</button>
-              <button onclick="addToTally(4, 'flat')" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700">+4</button>
-              <button onclick="addToTally(5, 'flat')" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700">+5</button>
-              <button onclick="addToTally(10, 'flat')" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700">+10</button>
-              <button onclick="addToTally(15, 'flat')" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700">+15</button>
-              <button onclick="addToTally(20, 'flat')" class="px-3 py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700">+20</button>
+          <!-- Rapid Increment Buttons (+1 to +20 in two lines) -->
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Quick Flat Modifiers (+1 to +20)</label>
+            <!-- Line 1: +1 to +10 -->
+            <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+              <button onclick="addToTally(1, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+1</button>
+              <button onclick="addToTally(2, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+2</button>
+              <button onclick="addToTally(3, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+3</button>
+              <button onclick="addToTally(4, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+4</button>
+              <button onclick="addToTally(5, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+5</button>
+              <button onclick="addToTally(6, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+6</button>
+              <button onclick="addToTally(7, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+7</button>
+              <button onclick="addToTally(8, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+8</button>
+              <button onclick="addToTally(9, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+9</button>
+              <button onclick="addToTally(10, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+10</button>
+            </div>
+            <!-- Line 2: +11 to +20 -->
+            <div class="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+              <button onclick="addToTally(11, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+11</button>
+              <button onclick="addToTally(12, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+12</button>
+              <button onclick="addToTally(13, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+13</button>
+              <button onclick="addToTally(14, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+14</button>
+              <button onclick="addToTally(15, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+15</button>
+              <button onclick="addToTally(16, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+16</button>
+              <button onclick="addToTally(17, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+17</button>
+              <button onclick="addToTally(18, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+18</button>
+              <button onclick="addToTally(19, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+19</button>
+              <button onclick="addToTally(20, 'flat')" class="py-1.5 bg-slate-800/80 hover:bg-slate-700 rounded text-xs font-mono-math font-semibold border border-slate-700 text-center">+20</button>
             </div>
           </div>
 
           <!-- Custom Input & Modifier Actions -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            <form onsubmit="event.preventDefault(); addCustomTally();" class="flex gap-2">
-              <input type="number" id="custom-tally-input" placeholder="Custom value..." class="w-full bg-slate-900/90 border border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-amber-500 font-mono-math">
-              <button type="submit" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">Add</button>
+            <form onsubmit="event.preventDefault(); addCustomTally();" class="flex gap-1.5">
+              <input type="number" id="custom-tally-input" placeholder="Custom..." class="w-full bg-slate-900/90 border border-slate-700 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:border-amber-500 font-mono-math">
+              <button type="submit" class="bg-slate-800 hover:bg-amber-600 hover:text-slate-900 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">Add</button>
+              <button type="button" onclick="subtractCustomTally()" class="bg-slate-800 hover:bg-rose-600 hover:text-white border border-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">Sub</button>
             </form>
             <div class="flex gap-2">
               <button onclick="applyHalfTally()" class="flex-1 bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-800/50 text-cyan-300 py-1.5 rounded-lg text-xs font-bold transition">
@@ -227,15 +298,14 @@
             </div>
           </div>
 
-          <!-- Quick Spell Check Preset -->
-          <div class="pt-2 border-t border-slate-800">
-            <span class="text-xs text-slate-400 block mb-1.5 font-medium">Standard 5e Spell Reach:</span>
-            <div class="flex flex-wrap gap-1">
-              <span id="spell-reach-30" class="text-[10px] px-2 py-0.5 rounded border border-slate-700 text-slate-400">30 ft</span>
-              <span id="spell-reach-60" class="text-[10px] px-2 py-0.5 rounded border border-slate-700 text-slate-400">60 ft</span>
-              <span id="spell-reach-90" class="text-[10px] px-2 py-0.5 rounded border border-slate-700 text-slate-400">90 ft</span>
-              <span id="spell-reach-120" class="text-[10px] px-2 py-0.5 rounded border border-slate-700 text-slate-400">120 ft</span>
-              <span id="spell-reach-150" class="text-[10px] px-2 py-0.5 rounded border border-slate-700 text-slate-400">150 ft</span>
+          <!-- Generic Distance & Reach Thresholds (5 ft to 600 ft) -->
+          <div class="pt-3 border-t border-slate-800 flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-slate-300 font-semibold uppercase tracking-wider">Reach & Distance Check</span>
+              <span class="text-[10px] text-slate-500">5 ft to 600 ft</span>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              <span id="generic-range-5" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">5 ft</span> <span id="generic-range-10" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">10 ft</span> <span id="generic-range-15" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">15 ft</span> <span id="generic-range-20" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">20 ft</span> <span id="generic-range-25" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">25 ft</span> <span id="generic-range-30" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">30 ft</span> <span id="generic-range-40" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">40 ft</span> <span id="generic-range-50" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">50 ft</span> <span id="generic-range-60" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">60 ft</span> <span id="generic-range-80" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">80 ft</span> <span id="generic-range-90" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">90 ft</span> <span id="generic-range-100" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">100 ft</span> <span id="generic-range-120" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">120 ft</span> <span id="generic-range-150" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">150 ft</span> <span id="generic-range-300" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">300 ft</span> <span id="generic-range-320" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">320 ft</span> <span id="generic-range-400" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">400 ft</span> <span id="generic-range-500" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">500 ft</span> <span id="generic-range-600" class="text-[11px] px-2 py-1 rounded border border-slate-700 text-slate-400 font-mono-math transition-colors">600 ft</span>
             </div>
           </div>
         </div>
@@ -543,6 +613,20 @@
           <button onclick="drainTallyToCombatant('${c.id}')" class="w-full py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
             <span>💥</span> Drain Tally Damage (<span class="font-mono-math">${tallyTotal}</span>)
           </button>
+
+          <!-- Combatant Conditions Badges & Add Button -->
+          <div class="flex flex-wrap items-center gap-1 pt-1.5 border-t border-slate-800/80">
+            <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mr-1">Status:</span>
+            ${(c.conditions || []).map(cond => `
+              <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-purple-950/70 border border-purple-800/60 text-purple-200 rounded">
+                ${cond}
+                <button onclick="removeCombatantCondition('${c.id}', '${cond}')" class="hover:text-rose-300 ml-0.5 leading-none font-bold" title="Remove">×</button>
+              </span>
+            `).join('')}
+            <button onclick="openConditionPicker('combatant', '${c.id}')" class="text-[10px] px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 rounded border border-slate-700 transition flex items-center gap-0.5">
+              <span>+</span> Cond
+            </button>
+          </div>
         `;
         container.appendChild(card);
       });
@@ -695,7 +779,16 @@
       const inp = document.getElementById('custom-tally-input');
       const val = parseInt(inp.value);
       if (!isNaN(val) && val !== 0) {
-        addToTally(val, `Custom`);
+        addToTally(val, `Custom (+${val})`);
+        inp.value = '';
+      }
+    }
+
+    function subtractCustomTally() {
+      const inp = document.getElementById('custom-tally-input');
+      const val = parseInt(inp.value);
+      if (!isNaN(val) && val !== 0) {
+        addToTally(-Math.abs(val), `Custom (-${Math.abs(val)})`);
         inp.value = '';
       }
     }
@@ -791,14 +884,17 @@
       document.getElementById('geo-res-dnd').innerText = Math.round(resultDnd) + ' ft';
       document.getElementById('geo-res-chebyshev').innerText = Math.round(resultChebyshev) + ' ft';
 
-      // Update spell badges
-      [30, 60, 90, 120, 150].forEach(range => {
-        const badge = document.getElementById('spell-reach-' + range);
-        if (badge) {
-          if (resultEuclid <= range) {
-            badge.className = "text-[10px] px-2 py-0.5 rounded border border-emerald-500 bg-emerald-950/60 text-emerald-300 font-bold";
+      // Update Generic Ranges (5 ft to 600 ft)
+      const allRanges = [5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 90, 100, 120, 150, 300, 320, 400, 500, 600];
+      allRanges.forEach(r => {
+        const el = document.getElementById('generic-range-' + r);
+        if (el) {
+          if (resultEuclid <= r) {
+            el.className = "text-[11px] px-2 py-1 rounded border border-emerald-500 bg-emerald-950/70 text-emerald-300 font-bold font-mono-math shadow-sm";
+            el.innerText = `✓ ${r} ft`;
           } else {
-            badge.className = "text-[10px] px-2 py-0.5 rounded border border-slate-700 text-slate-500 line-through";
+            el.className = "text-[11px] px-2 py-1 rounded border border-slate-800 bg-slate-900 text-slate-500 line-through font-mono-math opacity-50";
+            el.innerText = `${r} ft`;
           }
         }
       });
@@ -891,6 +987,7 @@ Stray Remainder: ${rem}`;
       document.getElementById('note-body-input').value = '';
       renderNotes();
     calculateSimpleMath();
+    renderInitiative();
     }
 
     function togglePinNote(id) {
@@ -900,6 +997,7 @@ Stray Remainder: ${rem}`;
         sessionNotes.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
         renderNotes();
     calculateSimpleMath();
+    renderInitiative();
       }
     }
 
@@ -907,12 +1005,14 @@ Stray Remainder: ${rem}`;
       sessionNotes = sessionNotes.filter(x => x.id !== id);
       renderNotes();
     calculateSimpleMath();
+    renderInitiative();
     }
 
     function filterNotes(cat) {
       activeNoteFilter = cat;
       renderNotes();
     calculateSimpleMath();
+    renderInitiative();
     }
 
     function copyAllNotes() {
@@ -924,6 +1024,210 @@ ${n.text}
     }
 
     
+    
+    // --- INITIATIVE & ROUND TRACKER STATE ---
+    let combatRound = 1;
+    let initiativeList = [
+      { id: 'init-1', name: 'Valiant Paladin', init: 19, conditions: [] },
+      { id: 'init-2', name: 'Goblin Raider 1', init: 14, conditions: ['Prone'] },
+      { id: 'init-3', name: 'Dread Archmage', init: 11, conditions: ['Concentrating'] }
+    ];
+
+    const ALL_DND_CONDITIONS = [
+      'Blinded', 'Charmed', 'Deafened', 'Frightened', 'Grappled',
+      'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified',
+      'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious', 'Concentrating'
+    ];
+
+    function adjustRound(delta) {
+      combatRound = Math.max(1, combatRound + delta);
+      document.getElementById('round-counter-display').innerText = `Round ${combatRound}`;
+    }
+
+    function resetRound() {
+      if (confirm('Reset combat round back to Round 1?')) {
+        combatRound = 1;
+        document.getElementById('round-counter-display').innerText = `Round 1`;
+      }
+    }
+
+    function addInitiativeFromForm() {
+      const nameInp = document.getElementById('init-name-input');
+      const scoreInp = document.getElementById('init-score-input');
+      const name = nameInp.value.trim() || 'Fighter';
+      const score = parseInt(scoreInp.value) || 10;
+
+      initiativeList.push({
+        id: 'init-' + Date.now() + Math.random().toString(36).substr(2, 4),
+        name,
+        init: score,
+        conditions: []
+      });
+
+      nameInp.value = '';
+      scoreInp.value = '';
+      sortInitiative();
+    }
+
+    function sortInitiative() {
+      initiativeList.sort((a, b) => Number(b.init) - Number(a.init));
+      renderInitiative();
+    }
+
+    function removeInitiative(id) {
+      initiativeList = initiativeList.filter(x => x.id !== id);
+      renderInitiative();
+    }
+
+    function clearInitiativeOrder() {
+      if (confirm('Clear the entire initiative order?')) {
+        initiativeList = [];
+        renderInitiative();
+      }
+    }
+
+    function updateInitScore(id, val) {
+      const item = initiativeList.find(x => x.id === id);
+      if (item) {
+        item.init = Number(val) || 0;
+      }
+    }
+
+    // --- UNIVERSAL CONDITION PICKER (COMBATANT & INITIATIVE) ---
+    let activePickerTarget = { type: null, id: null };
+
+    function openConditionPicker(targetType, targetId) {
+      activePickerTarget = { type: targetType, id: targetId };
+      let targetName = 'Combatant';
+
+      if (targetType === 'combatant') {
+        const c = combatants.find(x => x.id === targetId);
+        if (c) targetName = c.name;
+      } else if (targetType === 'initiative') {
+        const item = initiativeList.find(x => x.id === targetId);
+        if (item) targetName = item.name;
+      }
+
+      document.getElementById('condition-picker-target-name').innerText = `Target: ${targetName}`;
+      document.getElementById('modal-condition-select').value = '';
+      document.getElementById('modal-condition-custom').value = '';
+
+      const modal = document.getElementById('condition-picker-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeConditionPicker() {
+      const modal = document.getElementById('condition-picker-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      activePickerTarget = { type: null, id: null };
+    }
+
+    function syncConditionSelect(val) {
+      if (val) {
+        document.getElementById('modal-condition-custom').value = val;
+      }
+    }
+
+    function selectQuickCondition(condName) {
+      document.getElementById('modal-condition-custom').value = condName;
+      confirmAddCondition();
+    }
+
+    function confirmAddCondition() {
+      const customVal = document.getElementById('modal-condition-custom').value.trim();
+      const selectVal = document.getElementById('modal-condition-select').value;
+      const conditionToAdd = customVal || selectVal;
+
+      if (!conditionToAdd) {
+        alert('Please choose or type a condition name.');
+        return;
+      }
+
+      if (activePickerTarget.type === 'combatant') {
+        const c = combatants.find(x => x.id === activePickerTarget.id);
+        if (c) {
+          if (!c.conditions) c.conditions = [];
+          if (!c.conditions.includes(conditionToAdd)) {
+            c.conditions.push(conditionToAdd);
+          }
+          renderCombatants();
+        }
+      } else if (activePickerTarget.type === 'initiative') {
+        const item = initiativeList.find(x => x.id === activePickerTarget.id);
+        if (item) {
+          if (!item.conditions) item.conditions = [];
+          if (!item.conditions.includes(conditionToAdd)) {
+            item.conditions.push(conditionToAdd);
+          }
+          renderInitiative();
+        }
+      }
+
+      closeConditionPicker();
+    }
+
+    function removeCombatantCondition(combatantId, condName) {
+      const c = combatants.find(x => x.id === combatantId);
+      if (c && c.conditions) {
+        c.conditions = c.conditions.filter(x => x !== condName);
+        renderCombatants();
+      }
+    }
+
+    function removeConditionFromItem(initId, condName) {
+      const item = initiativeList.find(x => x.id === initId);
+      if (item && item.conditions) {
+        item.conditions = item.conditions.filter(c => c !== condName);
+        renderInitiative();
+      }
+    }
+
+    function renderInitiative() {
+      const container = document.getElementById('initiative-list-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (initiativeList.length === 0) {
+        container.innerHTML = '<div class="text-slate-500 italic text-center py-6 text-xs">Initiative order is empty.</div>';
+        return;
+      }
+
+      initiativeList.forEach((entry, idx) => {
+        const row = document.createElement('div');
+        row.className = 'bg-slate-900/90 p-2.5 rounded-lg border border-slate-800 flex flex-col gap-1.5 shadow-sm';
+
+        row.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+              <span class="text-[11px] font-mono-math font-bold text-slate-500 w-4">${idx + 1}.</span>
+              <span class="text-xs font-bold text-slate-100 truncate">${entry.name}</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] text-slate-400 font-mono-math">Init:</span>
+              <input type="number" value="${entry.init}" oninput="updateInitScore('${entry.id}', this.value)" class="w-12 bg-slate-800 border border-slate-700 rounded px-1 py-0.5 text-xs text-center font-bold text-amber-400 font-mono-math">
+              <button onclick="removeInitiative('${entry.id}')" class="text-slate-500 hover:text-rose-400 text-xs px-1" title="Remove">✕</button>
+            </div>
+          </div>
+
+          <!-- Conditions Row -->
+          <div class="flex flex-wrap items-center gap-1 pt-1 border-t border-slate-800/60">
+            ${(entry.conditions || []).map(c => `
+              <span class="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 bg-purple-950/70 border border-purple-800/60 text-purple-200 rounded">
+                ${c}
+                <button onclick="removeConditionFromItem('${entry.id}', '${c}')" class="hover:text-rose-300 ml-0.5 leading-none font-bold" title="Remove">×</button>
+              </span>
+            `).join('')}
+            <button onclick="openConditionPicker('initiative', '${entry.id}')" class="text-[10px] px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-amber-300 rounded border border-slate-700/60 transition flex items-center gap-0.5">
+              <span>+</span> Cond
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
     // --- SIMPLE MATH LOGIC ---
     let currentMathOp = 'add';
 
@@ -945,6 +1249,7 @@ ${n.text}
       else sym.innerText = '÷';
 
       calculateSimpleMath();
+    renderInitiative();
     }
 
     function calculateSimpleMath() {
@@ -994,6 +1299,83 @@ ${n.text}
     calculateLoot();
     renderNotes();
     calculateSimpleMath();
+    renderInitiative();
   </script>
+
+  <!-- Condition Picker Modal Dialog -->
+  <div id="condition-picker-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[#161a23] border border-slate-700 w-full max-w-md rounded-2xl p-5 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-slate-100 font-serif-title flex items-center gap-1.5">
+            <span>✨</span> Add Condition / Effect
+          </h3>
+          <p id="condition-picker-target-name" class="text-xs text-amber-400 font-medium mt-0.5">Target: Combatant</p>
+        </div>
+        <button onclick="closeConditionPicker()" class="text-slate-500 hover:text-slate-300 text-base leading-none">✕</button>
+      </div>
+
+      <!-- Quick preset chips -->
+      <div>
+        <label class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1.5">Common Conditions</label>
+        <div class="flex flex-wrap gap-1.5">
+          <button type="button" onclick="selectQuickCondition('Prone')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-purple-950/80 hover:text-purple-300 hover:border-purple-700 border border-slate-700 rounded transition">Prone</button>
+          <button type="button" onclick="selectQuickCondition('Poisoned')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-purple-950/80 hover:text-purple-300 hover:border-purple-700 border border-slate-700 rounded transition">Poisoned</button>
+          <button type="button" onclick="selectQuickCondition('Stunned')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-purple-950/80 hover:text-purple-300 hover:border-purple-700 border border-slate-700 rounded transition">Stunned</button>
+          <button type="button" onclick="selectQuickCondition('Frightened')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-purple-950/80 hover:text-purple-300 hover:border-purple-700 border border-slate-700 rounded transition">Frightened</button>
+          <button type="button" onclick="selectQuickCondition('Grappled')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-purple-950/80 hover:text-purple-300 hover:border-purple-700 border border-slate-700 rounded transition">Grappled</button>
+          <button type="button" onclick="selectQuickCondition('Concentrating')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-purple-950/80 hover:text-purple-300 hover:border-purple-700 border border-slate-700 rounded transition">Concentrating</button>
+          <button type="button" onclick="selectQuickCondition('Invisible')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-purple-950/80 hover:text-purple-300 hover:border-purple-700 border border-slate-700 rounded transition">Invisible</button>
+          <button type="button" onclick="selectQuickCondition('Paralyzed')" class="text-xs px-2 py-1 bg-slate-800 hover:bg-purple-950/80 hover:text-purple-300 hover:border-purple-700 border border-slate-700 rounded transition">Paralyzed</button>
+        </div>
+      </div>
+
+      <!-- Dropdown or Custom Text -->
+      <div class="flex flex-col gap-2.5">
+        <div>
+          <label class="text-[11px] font-semibold text-slate-400 block mb-1">Pick From Full 5e List</label>
+          <select id="modal-condition-select" onchange="syncConditionSelect(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+            <option value="">-- Choose Condition --</option>
+            <option value="Blinded">Blinded</option>
+            <option value="Charmed">Charmed</option>
+            <option value="Concentrating">Concentrating</option>
+            <option value="Deafened">Deafened</option>
+            <option value="Exhaustion">Exhaustion</option>
+            <option value="Frightened">Frightened</option>
+            <option value="Grappled">Grappled</option>
+            <option value="Incapacitated">Incapacitated</option>
+            <option value="Invisible">Invisible</option>
+            <option value="Paralyzed">Paralyzed</option>
+            <option value="Petrified">Petrified</option>
+            <option value="Poisoned">Poisoned</option>
+            <option value="Prone">Prone</option>
+            <option value="Restrained">Restrained</option>
+            <option value="Stunned">Stunned</option>
+            <option value="Unconscious">Unconscious</option>
+            <option value="Blessed">Blessed</option>
+            <option value="Bane">Bane</option>
+            <option value="Hexed">Hexed</option>
+            <option value="Hunter's Mark">Hunter's Mark</option>
+            <option value="Haste">Haste</option>
+            <option value="Slow">Slow</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-semibold text-slate-400 block mb-1">Or Type Custom Condition / Spell Effect</label>
+          <input type="text" id="modal-condition-custom" placeholder="e.g. Faerie Fire, Raging, Cursed..." class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+        <button type="button" onclick="closeConditionPicker()" class="px-3 py-1.5 text-xs text-slate-400 hover:text-slate-200 rounded-lg">Cancel</button>
+        <button type="button" onclick="confirmAddCondition()" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-900 font-bold text-xs rounded-lg transition">
+          + Add Condition
+        </button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
