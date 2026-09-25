@@ -1728,16 +1728,18 @@
       document.getElementById('geo-res-dnd').innerText = Math.round(resultDnd) + ' ft';
       document.getElementById('geo-res-chebyshev').innerText = Math.round(resultChebyshev) + ' ft';
 
-      // Update Generic Ranges (In Reach: Green, Out of Reach: Red/Faded)
+      // Update Generic Ranges:
+      // Everything under/within the calculated distance is in reach (Green)
+      // Everything outside that distance is out of reach (Red / Faded)
       const allRanges = [5, 10, 15, 20, 25, 30, 40, 50, 60, 80, 90, 100, 120, 150, 300, 320, 400, 500, 600];
       allRanges.forEach(r => {
         const el = document.getElementById('generic-range-' + r);
         if (el) {
-          if (resultEuclid <= r) {
+          if (r <= resultEuclid) {
             el.className = "text-[11px] px-2 py-1 rounded border border-emerald-500/80 bg-emerald-950/80 text-emerald-300 font-bold font-mono-math shadow-sm";
             el.innerText = `✓ ${r} ft`;
           } else {
-            el.className = "text-[11px] px-2 py-1 rounded border border-rose-950/60 bg-rose-950/20 text-rose-400/60 font-mono-math line-through opacity-60";
+            el.className = "text-[11px] px-2 py-1 rounded border border-rose-900/60 bg-rose-950/30 text-rose-400 font-mono-math opacity-60";
             el.innerText = `✗ ${r} ft`;
           }
         }
